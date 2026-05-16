@@ -74,39 +74,58 @@ export default async function DemoPage() {
           </div>
         </header>
 
-        <div className="flex flex-1 flex-col px-4 pt-4 pb-4 md:px-6">
-          <section className="mb-4 flex items-start justify-between gap-4" id="overview">
+        <div className="flex flex-1 flex-col space-y-4 px-4 pt-4 pb-4 md:px-6">
+          <section className="flex items-center justify-between" id="overview">
             <div>
-              <h1 className="font-serif text-4xl leading-[0.95] text-slate-950 md:text-5xl">
+              <h1 className="text-2xl font-bold tracking-tight text-slate-950">Hi, Welcome back 👋</h1>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
                 Track the promises that are easiest for support teams to forget.
-              </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
-                This screen should hold proof, show urgency, and keep the next follow-up obvious without drowning the operator in chrome.
               </p>
             </div>
           </section>
 
-          <section className="grid gap-4 md:grid-cols-3">
-            <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Open cases</span>
-              <strong className="mt-3 block font-serif text-4xl text-slate-950">{mockCases.length}</strong>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Saved promises that still need verification, refund confirmation, or escalation.
-              </p>
+          <section className="grid grid-cols-1 gap-4 *:bg-gradient-to-t *:from-slate-100/70 *:to-white *:shadow-sm md:grid-cols-2 lg:grid-cols-3">
+            <article data-slot="card" className="flex flex-col gap-6 rounded-xl border border-slate-200 py-6">
+              <div data-slot="card-header" className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6">
+                <div data-slot="card-description" className="text-sm text-slate-500">Open cases</div>
+                <div data-slot="card-title" className="text-2xl font-semibold tabular-nums text-slate-950 @[250px]/card:text-3xl">
+                  {mockCases.length}
+                </div>
+              </div>
+              <div data-slot="card-footer" className="flex flex-col items-start gap-1.5 px-6 text-sm">
+                <div className="line-clamp-1 flex gap-2 font-medium text-slate-950">
+                  Proof saved and still unresolved
+                </div>
+                <div className="text-slate-500">Cases that still need verification or escalation</div>
+              </div>
             </article>
-            <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Due soon</span>
-              <strong className="mt-3 block font-serif text-4xl text-slate-950">{waitingCount}</strong>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Follow-ups that should stay visible before the support trail goes cold.
-              </p>
+            <article data-slot="card" className="flex flex-col gap-6 rounded-xl border border-slate-200 py-6">
+              <div data-slot="card-header" className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6">
+                <div data-slot="card-description" className="text-sm text-slate-500">Due soon</div>
+                <div data-slot="card-title" className="text-2xl font-semibold tabular-nums text-slate-950 @[250px]/card:text-3xl">
+                  {waitingCount}
+                </div>
+              </div>
+              <div data-slot="card-footer" className="flex flex-col items-start gap-1.5 px-6 text-sm">
+                <div className="line-clamp-1 flex gap-2 font-medium text-slate-950">
+                  Follow-ups leading the queue
+                </div>
+                <div className="text-slate-500">Support trails that can go cold if ignored</div>
+              </div>
             </article>
-            <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Stable</span>
-              <strong className="mt-3 block font-serif text-4xl text-slate-950">{promisedCount}</strong>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Cases with proof saved already, but not urgent enough to lead the queue.
-              </p>
+            <article data-slot="card" className="flex flex-col gap-6 rounded-xl border border-slate-200 py-6">
+              <div data-slot="card-header" className="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6">
+                <div data-slot="card-description" className="text-sm text-slate-500">Stable</div>
+                <div data-slot="card-title" className="text-2xl font-semibold tabular-nums text-slate-950 @[250px]/card:text-3xl">
+                  {promisedCount}
+                </div>
+              </div>
+              <div data-slot="card-footer" className="flex flex-col items-start gap-1.5 px-6 text-sm">
+                <div className="line-clamp-1 flex gap-2 font-medium text-slate-950">
+                  Saved proof, lower urgency
+                </div>
+                <div className="text-slate-500">Cases with evidence attached but not at the top of the board</div>
+              </div>
             </article>
           </section>
 

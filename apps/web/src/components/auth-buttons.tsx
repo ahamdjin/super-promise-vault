@@ -99,15 +99,33 @@ export function AuthPanel({ nextPath = '/demo' }: AuthPanelProps) {
   }
 
   return (
-    <div className="auth-panel">
-      <div className="auth-panel__intro">
-        <h2>{modeCopy.title}</h2>
-        <p>{modeCopy.helper}</p>
+    <div className="space-y-6">
+      <div className="space-y-2 text-center">
+        <h2 className="text-2xl font-semibold tracking-tight text-slate-950">{modeCopy.title}</h2>
+        <p className="text-sm leading-6 text-slate-500">{modeCopy.helper}</p>
       </div>
 
-      <form className="auth-form" onSubmit={handleEmailSubmit}>
-        <label className="auth-field">
-          <span>Email address</span>
+      <button
+        type="button"
+        className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+        onClick={signInWithGoogle}
+        disabled={isSubmitting || isGooglePending}
+      >
+        {isGooglePending ? 'Redirecting...' : 'Continue with Google'}
+      </button>
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-slate-200" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white px-2 font-medium tracking-[0.16em] text-slate-400">or continue with email</span>
+        </div>
+      </div>
+
+      <form className="space-y-4" onSubmit={handleEmailSubmit}>
+        <label className="grid gap-2">
+          <span className="text-sm font-medium text-slate-700">Email address</span>
           <input
             type="email"
             name="email"
@@ -116,11 +134,12 @@ export function AuthPanel({ nextPath = '/demo' }: AuthPanelProps) {
             onChange={(event) => setEmail(event.target.value)}
             placeholder="you@company.com"
             required
+            className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-slate-300 focus:ring-4 focus:ring-slate-200/60"
           />
         </label>
 
-        <label className="auth-field">
-          <span>Password</span>
+        <label className="grid gap-2">
+          <span className="text-sm font-medium text-slate-700">Password</span>
           <input
             type="password"
             name="password"
@@ -130,22 +149,23 @@ export function AuthPanel({ nextPath = '/demo' }: AuthPanelProps) {
             placeholder="Enter a secure password"
             minLength={8}
             required
+            className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-950 outline-none transition focus:border-slate-300 focus:ring-4 focus:ring-slate-200/60"
           />
         </label>
 
         <button
           type="submit"
-          className="button button--primary auth-button"
+          className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
           disabled={isSubmitting || isGooglePending}
         >
           {isSubmitting ? 'Working...' : modeCopy.submitLabel}
         </button>
 
-        <div className="auth-panel__switch">
+        <div className="flex items-center justify-center gap-2 text-sm text-slate-500">
           <span>{mode === 'create-account' ? 'Already have an account?' : 'Need an account?'}</span>
           <button
             type="button"
-            className="auth-inline-button"
+            className="font-medium text-slate-950 underline underline-offset-4"
             onClick={() => {
               setMode(mode === 'create-account' ? 'sign-in' : 'create-account');
               setErrorMessage(null);
@@ -157,21 +177,16 @@ export function AuthPanel({ nextPath = '/demo' }: AuthPanelProps) {
         </div>
       </form>
 
-      <div className="auth-divider">
-        <span>or</span>
-      </div>
-
-      <button
-        type="button"
-        className="button button--ghost auth-button auth-button--google"
-        onClick={signInWithGoogle}
-        disabled={isSubmitting || isGooglePending}
-      >
-        {isGooglePending ? 'Redirecting...' : 'Continue with Google'}
-      </button>
-
-      {errorMessage ? <p className="auth-error">{errorMessage}</p> : null}
-      {successMessage ? <p className="auth-success">{successMessage}</p> : null}
+      {errorMessage ? (
+        <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {errorMessage}
+        </p>
+      ) : null}
+      {successMessage ? (
+        <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {successMessage}
+        </p>
+      ) : null}
     </div>
   );
 }
