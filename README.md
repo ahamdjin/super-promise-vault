@@ -184,6 +184,25 @@ For detailed instructions on configuring Clerk authentication (including organiz
 
 You should now be able to access the application at http://localhost:3000.
 
+## Simple Extension
+
+A plain Chrome extension scaffold now lives in [extension/](./extension).
+
+Current behavior:
+
+- reads the current tab title and URL
+- grabs selected text from the active page when possible
+- lets you save a simple support-case capture locally
+- shows recent captures in the popup
+- exports a capture as JSON
+
+To load it:
+
+1. Open `chrome://extensions`
+2. Enable `Developer mode`
+3. Click `Load unpacked`
+4. Select the `extension/` folder
+
 > [!WARNING]
 > After cloning or forking the repository, be cautious when pulling or syncing with the latest changes, as this may result in breaking conflicts.
 

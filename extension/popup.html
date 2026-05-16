@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Support Promise Vault</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Simple capture</p>
+          <h1>Support Promise Vault</h1>
+        </div>
+        <button id="refresh-page" class="ghost-button" type="button">Refresh</button>
+      </header>
+
+      <section class="panel">
+        <div class="panel-heading">
+          <h2>Current page</h2>
+          <span id="page-status" class="status-pill">Loading</span>
+        </div>
+        <div class="meta-list">
+          <div>
+            <label>Title</label>
+            <p id="page-title">-</p>
+          </div>
+          <div>
+            <label>URL</label>
+            <p id="page-url">-</p>
+          </div>
+          <div>
+            <label>Selection</label>
+            <p id="page-selection" class="multiline">No selected text found yet.</p>
+          </div>
+        </div>
+      </section>
+
+      <form id="capture-form" class="panel form-panel">
+        <div class="panel-heading">
+          <h2>Case details</h2>
+          <span class="status-pill muted">Local only</span>
+        </div>
+
+        <div class="field-grid">
+          <label class="field">
+            <span>Company</span>
+            <input id="company" name="company" type="text" placeholder="Loom" required />
+          </label>
+
+          <label class="field">
+            <span>Case ID</span>
+            <input id="case-id" name="caseId" type="text" placeholder="LM-4821" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Issue title</span>
+          <input
+            id="issue-title"
+            name="issueTitle"
+            type="text"
+            placeholder="Duplicate annual renewal charge"
+            required
+          />
+        </label>
+
+        <label class="field">
+          <span>Promised outcome</span>
+          <textarea
+            id="promised-outcome"
+            name="promisedOutcome"
+            rows="3"
+            placeholder="Refund for duplicate annual renewal charge"
+            required
+          ></textarea>
+        </label>
+
+        <div class="field-grid">
+          <label class="field">
+            <span>Amount</span>
+            <input id="amount" name="amount" type="text" placeholder="$96.00" />
+          </label>
+
+          <label class="field">
+            <span>Follow-up date</span>
+            <input id="follow-up-at" name="followUpAt" type="date" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Internal note</span>
+          <textarea
+            id="internal-note"
+            name="internalNote"
+            rows="3"
+            placeholder="What needs to happen next?"
+          ></textarea>
+        </label>
+
+        <div class="button-row">
+          <button id="save-case" class="primary-button" type="submit">Save capture</button>
+          <button id="export-case" class="secondary-button" type="button">Export JSON</button>
+        </div>
+      </form>
+
+      <section class="panel">
+        <div class="panel-heading">
+          <h2>Recent captures</h2>
+          <button id="clear-captures" class="ghost-button danger" type="button">Clear</button>
+        </div>
+        <div id="recent-captures" class="capture-list">
+          <p class="empty-state">No captures saved yet.</p>
+        </div>
+      </section>
+
+      <p id="feedback" class="feedback" aria-live="polite"></p>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
