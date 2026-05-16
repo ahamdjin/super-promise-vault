@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserAvatarProfile } from '@/components/user-avatar-profile';
+import { ProfileSettingsPanel } from './profile-settings-panel';
 
 export default async function ProfileViewPage() {
   const supabase = await createClient();
@@ -22,22 +21,28 @@ export default async function ProfileViewPage() {
       }
     : null;
 
+  const providers = Array.from(
+    new Set(
+      [
+        ...(Array.isArray(user?.app_metadata?.providers) ? user?.app_metadata?.providers : []),
+        ...(Array.isArray(user?.identities)
+          ? user.identities
+              .map((identity) =>
+                typeof identity.provider === 'string' ? identity.provider : null
+              )
+              .filter((provider): provider is string => provider !== null)
+          : [])
+      ].filter((provider): provider is string => typeof provider === 'string' && provider.length > 0)
+    )
+  );
+
   return (
     <div className='flex w-full flex-col p-4'>
-      <Card className='max-w-2xl'>
-        <CardHeader>
-          <CardTitle>Profile</CardTitle>
-        </CardHeader>
-        <CardContent className='flex items-center gap-4'>
-          <UserAvatarProfile className='h-14 w-14 rounded-xl' user={profile} />
-          <div className='space-y-1'>
-            <p className='text-lg font-semibold'>
-              {profile?.fullName || profile?.email || 'Support Promise Vault'}
-            </p>
-            <p className='text-muted-foreground text-sm'>{profile?.email || 'No email found'}</p>
-          </div>
-        </CardContent>
-      </Card>
+      <ProfileSettingsPanel
+        profile={profile}
+        providers={providers.length > 0 ? providers : ['email']}
+        createdAt={user?.created_at || null}
+      />
     </div>
   );
 }
