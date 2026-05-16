@@ -22,162 +22,180 @@ export default async function DemoPage() {
   const providerMix = Array.from(new Set(mockCases.map((item) => item.provider)));
 
   return (
-    <main className="demo-shell">
-      <aside className="demo-sidebar">
-        <div className="demo-sidebar__brand">
-          <span className="demo-sidebar__mark">SPV</span>
+    <main className="flex min-h-screen w-full bg-slate-50 text-slate-950">
+      <aside className="hidden w-64 shrink-0 border-r border-slate-200 bg-slate-950 text-white md:flex md:flex-col">
+        <div className="flex items-center gap-3 border-b border-white/10 px-4 py-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-sm font-semibold tracking-[0.18em]">
+            SPV
+          </div>
           <div>
-            <p>Support Promise Vault</p>
-            <span>Operator view</span>
+            <p className="font-semibold">Support Promise Vault</p>
+            <span className="text-sm text-slate-400">Operator workspace</span>
           </div>
         </div>
 
-        <nav className="demo-sidebar__nav" aria-label="Dashboard sections">
-          <a href="#overview" className="demo-nav-link demo-nav-link--active">
-            Overview
-          </a>
-          <a href="#board" className="demo-nav-link">
-            Cases board
-          </a>
-          <a href="#focus" className="demo-nav-link">
-            Focus queue
-          </a>
-        </nav>
+        <div className="flex-1 px-3 py-4">
+          <div className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Cases</div>
+          <nav className="space-y-1">
+            <a className="flex items-center rounded-xl bg-white/10 px-3 py-2.5 text-sm font-medium text-white" href="#overview">
+              Overview
+            </a>
+            <a className="flex items-center rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5" href="#board">
+              Active cases
+            </a>
+            <a className="flex items-center rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5" href="#focus">
+              Focus item
+            </a>
+          </nav>
+        </div>
 
-        <div className="demo-sidebar__note">
-          <span className="eyebrow">Current mode</span>
-          <p>Auth is live. This screen is the operator shell we will connect to live support cases next.</p>
+        <div className="border-t border-white/10 p-3">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Current mode</p>
+            <p className="mt-2 text-sm leading-6 text-slate-300">
+              Auth is live. The next product step is replacing these mock cases with Supabase reads and one create-case flow.
+            </p>
+          </div>
         </div>
       </aside>
 
-      <section className="demo-workspace">
-        <header className="demo-topbar" id="overview">
-          <div className="demo-topbar__copy">
-            <p className="eyebrow">Overview</p>
-            <h1>Track the promises that are easiest for support teams to forget.</h1>
-            <p>
-              The job of this screen is simple: hold proof, show urgency, and keep the next follow-up obvious.
-            </p>
+      <section className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-slate-50/80 px-4 backdrop-blur-md md:px-6">
+          <div className="flex min-w-0 flex-col">
+            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Overview</span>
+            <strong className="truncate text-sm font-semibold text-slate-900">Support promises that still need action</strong>
           </div>
-          <SessionActions email={user.email ?? 'Signed in user'} />
+
+          <div className="flex items-center gap-3">
+            <div className="hidden items-center rounded-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 md:flex">
+              Search cases, merchants, IDs
+            </div>
+            <SessionActions email={user.email ?? 'Signed in user'} />
+          </div>
         </header>
 
-        <section className="demo-overview">
-          <article>
-            <span>Open cases</span>
-            <strong>{mockCases.length}</strong>
-            <p>Saved promises that still need verification, refund confirmation, or escalation.</p>
-          </article>
-          <article>
-            <span>Due soon</span>
-            <strong>{waitingCount}</strong>
-            <p>Follow-ups that should stay visible before the support trail goes cold.</p>
-          </article>
-          <article>
-            <span>Stable</span>
-            <strong>{promisedCount}</strong>
-            <p>Cases with proof saved already, but not urgent enough to lead the queue.</p>
-          </article>
-        </section>
-
-        <section className="demo-status-strip">
-          <div>
-            <span className="demo-status-strip__label">Providers</span>
-            <div className="demo-token-row">
-              {providerMix.map((provider) => (
-                <span key={provider} className="demo-token">
-                  {provider}
-                </span>
-              ))}
+        <div className="flex flex-1 flex-col px-4 pt-4 pb-4 md:px-6">
+          <section className="mb-4 flex items-start justify-between gap-4" id="overview">
+            <div>
+              <h1 className="font-serif text-4xl leading-[0.95] text-slate-950 md:text-5xl">
+                Track the promises that are easiest for support teams to forget.
+              </h1>
+              <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
+                This screen should hold proof, show urgency, and keep the next follow-up obvious without drowning the operator in chrome.
+              </p>
             </div>
-          </div>
-          <div>
-            <span className="demo-status-strip__label">Data source</span>
-            <strong>Mock cases for layout validation</strong>
-          </div>
-          <div>
-            <span className="demo-status-strip__label">Next build step</span>
-            <strong>Supabase read + create-case flow</strong>
-          </div>
-        </section>
-
-        <section className="demo-grid" id="board">
-          <section className="demo-board-panel">
-            <div className="demo-board-panel__header">
-              <div>
-                <span className="demo-column__label">Primary queue</span>
-                <h2>Active cases</h2>
-              </div>
-              <div className="demo-board-panel__filters">
-                <span className="demo-filter demo-filter--active">All</span>
-                <span className="demo-filter">Waiting</span>
-                <span className="demo-filter">Promised</span>
-              </div>
-            </div>
-            <p className="demo-column__hint">
-              A cleaner operator view than stacked cards: scan company, promise, amount, due date, and state in one pass.
-            </p>
-            <CaseList items={focusQueue} />
           </section>
 
-          <aside className="demo-focus" id="focus">
-            <section className="demo-panel">
-              <div className="demo-panel__header">
-                <span className="eyebrow">Case spotlight</span>
-                <h2>Focus item</h2>
-              </div>
-              <div className="demo-focus-card">
-                <span className="case-list__chip">{primaryCase.provider}</span>
-                <h3>{primaryCase.company}</h3>
-                <p>{primaryCase.promise}</p>
-                <div className="demo-focus-card__grid">
-                  <div>
-                    <span>Amount</span>
-                    <strong>{primaryCase.amount}</strong>
-                  </div>
-                  <div>
-                    <span>Follow up</span>
-                    <strong>{primaryCase.followUp}</strong>
-                  </div>
-                </div>
-                <div className="demo-focus-card__story">
-                  <span>Saved note</span>
-                  <p>{primaryCase.summary}</p>
-                </div>
-              </div>
-            </section>
+          <section className="grid gap-4 md:grid-cols-3">
+            <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Open cases</span>
+              <strong className="mt-3 block font-serif text-4xl text-slate-950">{mockCases.length}</strong>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Saved promises that still need verification, refund confirmation, or escalation.
+              </p>
+            </article>
+            <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Due soon</span>
+              <strong className="mt-3 block font-serif text-4xl text-slate-950">{waitingCount}</strong>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Follow-ups that should stay visible before the support trail goes cold.
+              </p>
+            </article>
+            <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Stable</span>
+              <strong className="mt-3 block font-serif text-4xl text-slate-950">{promisedCount}</strong>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Cases with proof saved already, but not urgent enough to lead the queue.
+              </p>
+            </article>
+          </section>
 
-            <section className="demo-panel">
-              <div className="demo-panel__header">
-                <span className="eyebrow">Upcoming</span>
-                <h2>Next actions</h2>
+          <section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_340px]" id="board">
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex flex-col gap-4 border-b border-slate-100 pb-4 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Primary queue</span>
+                  <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Active cases</h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                    Use a list-first operator view: company, promise, amount, due date, and state in one scan.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="rounded-full bg-slate-950 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white">
+                    All
+                  </span>
+                  <span className="rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    Waiting
+                  </span>
+                  <span className="rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    Promised
+                  </span>
+                </div>
               </div>
-              <div className="demo-focus-list">
-                {waitingCases.map((item) => (
-                  <article key={item.id} className="demo-focus-item">
-                    <div>
-                      <strong>{item.company}</strong>
-                      <p>{item.promise}</p>
-                    </div>
-                    <span>{item.followUp}</span>
-                  </article>
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                {providerMix.map((provider) => (
+                  <span
+                    key={provider}
+                    className="inline-flex min-h-8 items-center rounded-full bg-emerald-50 px-3 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700"
+                  >
+                    {provider}
+                  </span>
                 ))}
               </div>
+
+              <CaseList items={focusQueue} />
             </section>
 
-            <section className="demo-panel">
-              <div className="demo-panel__header">
-                <span className="eyebrow">Build queue</span>
-                <h2>Next product step</h2>
-              </div>
-              <ul className="demo-checklist">
-                <li>Read real cases from Supabase instead of static mock rows.</li>
-                <li>Create one deliberate case-create flow before extension sync.</li>
-                <li>Use this right rail for transcript proof and follow-up history.</li>
-              </ul>
-            </section>
-          </aside>
-        </section>
+            <aside className="flex flex-col gap-4" id="focus">
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Case spotlight</span>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Focus item</h2>
+                <div className="mt-4 space-y-4">
+                  <span className="inline-flex min-h-8 items-center rounded-full bg-emerald-50 px-3 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">
+                    {primaryCase.provider}
+                  </span>
+                  <div>
+                    <h3 className="text-xl font-semibold text-slate-950">{primaryCase.company}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{primaryCase.promise}</p>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Amount</span>
+                      <strong className="mt-2 block text-sm text-slate-950">{primaryCase.amount}</strong>
+                    </div>
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Follow up</span>
+                      <strong className="mt-2 block text-sm text-slate-950">{primaryCase.followUp}</strong>
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Saved note</span>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{primaryCase.summary}</p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Upcoming</span>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Next actions</h2>
+                <div className="mt-4 space-y-3">
+                  {waitingCases.map((item) => (
+                    <article key={item.id} className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                      <div>
+                        <strong className="block text-sm text-slate-950">{item.company}</strong>
+                        <p className="mt-1 text-sm leading-6 text-slate-600">{item.promise}</p>
+                      </div>
+                      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                        {item.followUp}
+                      </span>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            </aside>
+          </section>
+        </div>
       </section>
     </main>
   );
