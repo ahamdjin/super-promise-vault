@@ -24,13 +24,21 @@ export function CaseCard({
           <p className="case-card__company">{company}</p>
           <h3>{promise}</h3>
         </div>
-        <span className={`status-pill status-pill--${status}`}>{status}</span>
+        <div className="case-card__badges">
+          <span className="case-card__provider">{provider}</span>
+          <span className={`status-pill status-pill--${status}`}>{status}</span>
+        </div>
       </div>
       <p className="case-card__summary">{summary}</p>
       <div className="case-card__meta">
-        <span>{provider}</span>
-        <span>{amount}</span>
-        <span>Follow up {followUp}</span>
+        <div>
+          <span className="case-card__meta-label">Amount</span>
+          <strong>{amount}</strong>
+        </div>
+        <div>
+          <span className="case-card__meta-label">Follow up</span>
+          <strong>{followUp}</strong>
+        </div>
       </div>
     </article>
   );
