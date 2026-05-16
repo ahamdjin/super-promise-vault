@@ -1,0 +1,13 @@
+{
+  "name": "support-promise-vault",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev:web": "pnpm --dir apps/web dev",
+    "dev:extension": "pnpm --dir apps/extension dev",
+    "build:web": "pnpm --dir apps/web build",
+    "build:extension": "pnpm --dir apps/extension build",
+    "lint:web": "pnpm --dir apps/web lint",
+    "compile:extension": "pnpm --dir apps/extension compile"
+  }
+}
