@@ -62,31 +62,15 @@ export function ChatHeader({ conversation }: ChatHeaderProps) {
 
       <div className='flex items-center gap-1.5 sm:gap-2'>
         <Button
-          type='button'
-          variant='ghost'
-          size='icon'
-          className='border-border/40 bg-background/60 text-muted-foreground hover:bg-muted/60 focus-visible:ring-primary/40 focus-visible:ring-offset-background size-8 rounded-full border transition focus-visible:ring-2 focus-visible:ring-offset-2 sm:size-10'
-          aria-label='Start audio call'
+          asChild
+          variant='outline'
+          size='sm'
+          className='gap-2'
         >
-          <Icons.phone className='h-3.5 w-3.5 sm:h-4 sm:w-4' />
-        </Button>
-        <Button
-          type='button'
-          variant='ghost'
-          size='icon'
-          className='border-border/40 bg-background/60 text-muted-foreground hover:bg-muted/60 focus-visible:ring-primary/40 focus-visible:ring-offset-background size-8 rounded-full border transition focus-visible:ring-2 focus-visible:ring-offset-2 sm:size-10'
-          aria-label='Start video call'
-        >
-          <Icons.video className='h-3.5 w-3.5 sm:h-4 sm:w-4' />
-        </Button>
-        <Button
-          type='button'
-          variant='ghost'
-          size='icon'
-          className='border-border/40 bg-background/60 text-muted-foreground hover:bg-muted/60 focus-visible:ring-primary/40 focus-visible:ring-offset-background size-8 rounded-full border transition focus-visible:ring-2 focus-visible:ring-offset-2 sm:size-10'
-          aria-label='Open conversation menu'
-        >
-          <Icons.ellipsis className='h-3.5 w-3.5 sm:h-4 sm:w-4' />
+          <a href={conversation.sourceUrl} target='_blank' rel='noreferrer'>
+            <Icons.externalLink className='size-4' />
+            Source
+          </a>
         </Button>
       </div>
     </header>

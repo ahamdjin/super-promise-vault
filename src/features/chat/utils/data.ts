@@ -17,6 +17,22 @@ export const initialConversations: Conversation[] = [
     followUpAt: 'May 20',
     nextAction: 'Check for the pending refund and follow up if no credit appears.',
     proofLabel: 'Refund promise and screenshot attached',
+    caseAttachments: [
+      {
+        id: 'loom-proof-1',
+        name: 'refund-confirmation.pdf',
+        size: 182400,
+        type: 'application/pdf',
+        description: 'Refund confirmation shared by support'
+      },
+      {
+        id: 'loom-proof-2',
+        name: 'billing-screenshot.png',
+        size: 224100,
+        type: 'image/png',
+        description: 'Screenshot of duplicate charge'
+      }
+    ],
     unread: 2,
     initials: 'LS',
     messages: [
@@ -43,9 +59,9 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: 'loom-4',
-        sender: 'internal',
-        author: 'Case note',
-        text: 'Promise captured. If refund is still missing after May 20, ask for confirmation receipt and bank reference.',
+        sender: 'user',
+        author: 'You',
+        text: 'Understood. If the refund is still missing after May 20, I will follow up again and ask for the reference number.',
         timestamp: '10:11'
       }
     ],
@@ -53,11 +69,6 @@ export const initialConversations: Conversation[] = [
       'Please email me the refund confirmation too.',
       'Can you share the refund reference number?',
       'I will check again tomorrow and follow up if needed.'
-    ],
-    autoReplies: [
-      "Absolutely — I've emailed the refund confirmation to your account.",
-      'The refund reference number is RF-99213. Keep it in case you need to contact your bank.',
-      "That works. If the pending credit still doesn't show, reply here and we'll investigate further."
     ]
   },
   {
@@ -76,6 +87,22 @@ export const initialConversations: Conversation[] = [
     followUpAt: 'Today',
     nextAction: 'Send follow-up note referencing the trial cancellation timing.',
     proofLabel: 'Email thread and cancellation timing note saved',
+    caseAttachments: [
+      {
+        id: 'apollo-proof-1',
+        name: 'trial-conversion-email.eml',
+        size: 98304,
+        type: 'message/rfc822',
+        description: 'Billing conversion email'
+      },
+      {
+        id: 'apollo-proof-2',
+        name: 'cancel-attempt.png',
+        size: 197632,
+        type: 'image/png',
+        description: 'Cancellation attempt timing screenshot'
+      }
+    ],
     unread: 0,
     initials: 'AC',
     messages: [
@@ -95,9 +122,9 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: 'apollo-3',
-        sender: 'internal',
-        author: 'Case note',
-        text: 'Follow-up due today if no billing answer lands. Attach screenshot of cancellation attempt timing.',
+        sender: 'user',
+        author: 'You',
+        text: 'Following up today if billing still has not answered. I can resend the cancellation screenshot if needed.',
         timestamp: '09:20'
       }
     ],
@@ -105,11 +132,6 @@ export const initialConversations: Conversation[] = [
       'Following up on the billing review from yesterday.',
       'Can you confirm whether billing approved the courtesy refund?',
       'I can send the cancellation screenshot again if needed.'
-    ],
-    autoReplies: [
-      'Thanks for following up. I am checking with billing right now.',
-      'Billing is still reviewing it. I will update you by the end of the day.',
-      'Yes, please resend the cancellation screenshot so I can attach it to the case.'
     ]
   },
   {
@@ -128,6 +150,15 @@ export const initialConversations: Conversation[] = [
     followUpAt: 'Closed',
     nextAction: 'No follow-up needed unless another unknown login alert appears.',
     proofLabel: 'Security confirmation captured',
+    caseAttachments: [
+      {
+        id: 'notion-proof-1',
+        name: 'security-confirmation.txt',
+        size: 1200,
+        type: 'text/plain',
+        description: 'Confirmation note from security agent'
+      }
+    ],
     unread: 1,
     initials: 'NS',
     messages: [
@@ -154,9 +185,9 @@ export const initialConversations: Conversation[] = [
       },
       {
         id: 'notion-4',
-        sender: 'internal',
-        author: 'Case note',
-        text: 'Resolved. Keep this thread for proof in case the login alert repeats.',
+        sender: 'user',
+        author: 'You',
+        text: 'Thanks. I will keep this confirmation in case the login alert happens again.',
         timestamp: 'Yesterday'
       }
     ],
@@ -164,11 +195,6 @@ export const initialConversations: Conversation[] = [
       'Thanks, that resolves it.',
       'Can you also send a confirmation email?',
       'Please confirm whether any data was accessed.'
-    ],
-    autoReplies: [
-      'Absolutely — I have emailed the confirmation.',
-      'No data was accessed before the session lock triggered.',
-      "You're all set. Let us know if the alert appears again."
     ]
   }
 ];

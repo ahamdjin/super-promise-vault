@@ -13,7 +13,6 @@ interface MessageBubbleProps {
 export function MessageBubble({ message }: MessageBubbleProps) {
   const shouldReduceMotion = useReducedMotion();
   const isUser = message.sender === 'user';
-  const isInternal = message.sender === 'internal';
 
   return (
     <motion.div
@@ -30,19 +29,13 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           'relative max-w-[85%] rounded-xl border px-3 py-2 text-xs leading-relaxed sm:max-w-[82%] sm:rounded-2xl sm:px-4 sm:py-3 sm:text-sm',
           isUser
             ? 'border-primary/40 bg-primary text-primary-foreground ml-auto'
-            : isInternal
-              ? 'border-amber-200 bg-amber-50'
-              : 'bg-muted border-transparent'
+            : 'bg-muted border-transparent'
         )}
       >
         <p
           className={cn(
             'font-medium sm:text-sm',
-            isUser
-              ? 'text-primary-foreground/80'
-              : isInternal
-                ? 'text-amber-800'
-                : 'text-foreground/80'
+            isUser ? 'text-primary-foreground/80' : 'text-foreground/80'
           )}
         >
           {message.author}
@@ -51,11 +44,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           <p
             className={cn(
               'mt-1 text-[0.875rem] sm:text-[0.95rem]',
-              isUser
-                ? 'text-primary-foreground/90'
-                : isInternal
-                  ? 'text-amber-950'
-                  : 'text-foreground/90'
+              isUser ? 'text-primary-foreground/90' : 'text-foreground/90'
             )}
           >
             {message.text}
@@ -76,8 +65,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           <span
             className={cn(
               'text-muted-foreground',
-              isUser && 'text-primary-foreground/80',
-              isInternal && 'text-amber-700'
+              isUser && 'text-primary-foreground/80'
             )}
           >
             {message.timestamp}

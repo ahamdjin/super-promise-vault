@@ -3,13 +3,10 @@ import { create } from 'zustand';
 import type { Attachment, Conversation, Message } from './types';
 import { initialConversations } from './data';
 
-type ReplyCursorState = Record<string, number>;
-
 type ChatState = {
   conversations: Conversation[];
   selectedConversationId: string;
   draft: string;
-  replyCursor: ReplyCursorState;
 
   selectConversation: (id: string) => void;
   setDraft: (text: string) => void;
@@ -18,8 +15,6 @@ type ChatState = {
     attachments?: Attachment[],
     options?: { sender?: Message['sender']; author?: string }
   ) => void;
-  addIncomingMessage: (conversationId: string, message: Message) => void;
-  advanceReplyCursor: (conversationId: string) => void;
   getActiveConversation: () => Conversation | undefined;
 };
 
@@ -30,7 +25,6 @@ export const useChatStore = create<ChatState>()(
     conversations: initialConversations,
     selectedConversationId: initialConversations[0]?.id ?? '',
     draft: '',
-    replyCursor: Object.fromEntries(initialConversations.map((c) => [c.id, 0])),
 
     selectConversation: (id) =>
       set((state) => ({
@@ -50,7 +44,7 @@ export const useChatStore = create<ChatState>()(
       const outgoing: Message = {
         id: 'outgoing-' + Date.now().toString(),
         sender,
-        author: options?.author ?? (sender === 'internal' ? 'Case note' : 'You'),
+        author: options?.author ?? 'You',
         text: text.trim(),
         timestamp,
         attachments: attachments?.length ? attachments : undefined
@@ -65,27 +59,6 @@ export const useChatStore = create<ChatState>()(
         )
       });
     },
-
-    addIncomingMessage: (conversationId, message) =>
-      set((state) => ({
-        conversations: state.conversations.map((c) => {
-          if (c.id !== conversationId) return c;
-          const isActive = state.selectedConversationId === conversationId;
-          return {
-            ...c,
-            messages: [...c.messages, message],
-            unread: isActive ? 0 : c.unread + 1
-          };
-        })
-      })),
-
-    advanceReplyCursor: (conversationId) =>
-      set((state) => ({
-        replyCursor: {
-          ...state.replyCursor,
-          [conversationId]: (state.replyCursor[conversationId] ?? 0) + 1
-        }
-      })),
 
     getActiveConversation: () => {
       const state = get();

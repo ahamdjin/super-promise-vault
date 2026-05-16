@@ -11,8 +11,8 @@ interface MessageComposerProps {
   draft: string;
   onDraftChange: (text: string) => void;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
-  composeMode: 'note' | 'reply';
-  onComposeModeChange: (mode: 'note' | 'reply') => void;
+  composeMode: 'user' | 'support';
+  onComposeModeChange: (mode: 'user' | 'support') => void;
   contactName: string;
   quickReplies: string[];
   attachments: Attachment[];
@@ -37,37 +37,37 @@ export function MessageComposer({
   return (
     <form onSubmit={onSubmit} className='space-y-2 sm:space-y-3' aria-label='Case composer'>
       <label htmlFor='messenger-editor' className='sr-only'>
-        {composeMode === 'note' ? 'Add a case note' : 'Draft a support reply'}
+        {composeMode === 'user' ? 'Write as user' : 'Write as support'}
       </label>
       <div className='border-border/40 bg-background/80 flex items-end gap-2 rounded-2xl border p-3 backdrop-blur sm:gap-3 sm:rounded-3xl sm:p-4'>
         <div className='min-w-0 flex-1'>
           <div className='mb-2 flex flex-wrap gap-2'>
             <button
               type='button'
-              onClick={() => onComposeModeChange('note')}
+              onClick={() => onComposeModeChange('user')}
               className={`inline-flex rounded-full px-2.5 py-1 text-[0.65rem] uppercase tracking-[0.18em] ${
-                composeMode === 'note'
+                composeMode === 'user'
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              Case note
+              User
             </button>
             <button
               type='button'
-              onClick={() => onComposeModeChange('reply')}
+              onClick={() => onComposeModeChange('support')}
               className={`inline-flex rounded-full px-2.5 py-1 text-[0.65rem] uppercase tracking-[0.18em] ${
-                composeMode === 'reply'
+                composeMode === 'support'
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted text-muted-foreground'
               }`}
             >
-              Support reply
+              Support
             </button>
             <span className='text-muted-foreground inline-flex items-center text-[0.7rem]'>
-              {composeMode === 'note'
-                ? 'Save evidence context, next actions, or internal follow-up notes.'
-                : 'Draft the next message you want to send to support.'}
+              {composeMode === 'user'
+                ? 'Add the customer side of the conversation.'
+                : 'Add the support side of the conversation.'}
             </span>
           </div>
           {attachments.length > 0 && (
@@ -95,16 +95,16 @@ export function MessageComposer({
               }
             }}
             placeholder={
-              composeMode === 'note'
-                ? 'Add a note for ' + contactName + ' (Enter to save, Shift+Enter for newline)'
-                : 'Draft a reply to ' + contactName + ' (Enter to send, Shift+Enter for newline)'
+              composeMode === 'user'
+                ? 'Write the user message for ' + contactName + ' (Enter to save, Shift+Enter for newline)'
+                : 'Write the support message for ' + contactName + ' (Enter to save, Shift+Enter for newline)'
             }
             rows={2}
             className='text-foreground placeholder:text-muted-foreground/70 min-h-[3rem] w-full resize-none border-none bg-transparent text-xs focus-visible:ring-0 focus-visible:outline-none sm:min-h-[4rem] sm:text-sm'
             aria-label={
-              composeMode === 'note'
-                ? 'Add a note for ' + contactName
-                : 'Draft a reply to ' + contactName
+              composeMode === 'user'
+                ? 'Write the user message for ' + contactName
+                : 'Write the support message for ' + contactName
             }
           />
           <div className='mt-2 flex flex-wrap gap-1.5 sm:mt-3 sm:gap-2'>
@@ -149,7 +149,7 @@ export function MessageComposer({
             size='icon'
             className='bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-primary/40 focus-visible:ring-offset-background size-8 rounded-full shadow-lg transition focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:size-10'
             disabled={!draft.trim() && attachments.length === 0}
-            aria-label={composeMode === 'note' ? 'Save note' : 'Send reply'}
+            aria-label={composeMode === 'user' ? 'Save user message' : 'Save support message'}
           >
             <Icons.send className='h-3.5 w-3.5 sm:h-4 sm:w-4' aria-hidden='true' />
           </Button>

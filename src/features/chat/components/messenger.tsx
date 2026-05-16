@@ -1,9 +1,8 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
-import { useReducedMotion } from 'motion/react';
 import { useChatStore } from '../utils/store';
-import type { Attachment, Message } from '../utils/types';
+import type { Attachment } from '../utils/types';
 import { ConversationList } from './conversation-list';
 import { ConversationSelect } from './conversation-select';
 import { ChatArea } from './chat-area';
@@ -13,32 +12,19 @@ export function Messenger() {
     conversations,
     selectedConversationId,
     draft,
-    replyCursor,
     selectConversation,
     setDraft,
     sendMessage,
-    addIncomingMessage,
-    advanceReplyCursor,
     getActiveConversation
   } = useChatStore();
 
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [composeMode, setComposeMode] = useState<'note' | 'reply'>('note');
-  const shouldReduceMotion = useReducedMotion();
-  const replyTimeoutRef = useRef<number | null>(null);
+  const [composeMode, setComposeMode] = useState<'user' | 'support'>('user');
 
   useEffect(() => {
     setAttachments([]);
-    setComposeMode('note');
+    setComposeMode('user');
   }, [selectedConversationId]);
-
-  useEffect(() => {
-    return () => {
-      if (replyTimeoutRef.current) {
-        window.clearTimeout(replyTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const handleAddAttachments = useCallback((files: FileList) => {
     const newAttachments: Attachment[] = Array.from(files).map((file) => ({
@@ -60,48 +46,18 @@ export function Messenger() {
       const active = getActiveConversation();
       if ((!draft.trim() && attachments.length === 0) || !active) return;
 
-      const conversationId = active.id;
-      const isReply = composeMode === 'reply';
       sendMessage(draft, attachments.length > 0 ? attachments : undefined, {
-        sender: isReply ? 'user' : 'internal',
-        author: isReply ? 'You' : 'Case note'
+        sender: composeMode === 'user' ? 'user' : 'contact',
+        author: composeMode === 'user' ? 'You' : active.name
       });
       setAttachments([]);
-
-      const autoReplies = isReply ? active.autoReplies : [];
-      if (!autoReplies.length) return;
-
-      const cursor = replyCursor[conversationId] ?? 0;
-      const nextReply = autoReplies[cursor % autoReplies.length];
-      const delay = shouldReduceMotion ? 0 : 900;
-
-      replyTimeoutRef.current = window.setTimeout(() => {
-        const timestamp = new Date().toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-        const incoming: Message = {
-          id: 'incoming-' + Date.now().toString(),
-          sender: 'contact',
-          author: active.name,
-          text: nextReply,
-          timestamp
-        };
-
-        addIncomingMessage(conversationId, incoming);
-        advanceReplyCursor(conversationId);
-      }, delay);
     },
     [
       draft,
       attachments,
-      replyCursor,
-      shouldReduceMotion,
       composeMode,
       getActiveConversation,
-      sendMessage,
-      addIncomingMessage,
-      advanceReplyCursor
+      sendMessage
     ]
   );
 

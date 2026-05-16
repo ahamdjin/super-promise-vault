@@ -3,11 +3,13 @@ export type Attachment = {
   name: string;
   size: number;
   type: string;
+  url?: string;
+  description?: string;
 };
 
 export type Message = {
   id: string;
-  sender: 'user' | 'contact' | 'internal';
+  sender: 'user' | 'contact';
   author: string;
   text: string;
   timestamp: string;
@@ -34,9 +36,9 @@ export type Conversation = {
   followUpAt: string;
   nextAction: string;
   proofLabel: string;
+  caseAttachments: Attachment[];
   unread: number;
   initials: string;
   messages: Message[];
   quickReplies: string[];
-  autoReplies: string[];
 };

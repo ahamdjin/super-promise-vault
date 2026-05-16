@@ -13,8 +13,8 @@ interface ChatAreaProps {
   draft: string;
   onDraftChange: (text: string) => void;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
-  composeMode: 'note' | 'reply';
-  onComposeModeChange: (mode: 'note' | 'reply') => void;
+  composeMode: 'user' | 'support';
+  onComposeModeChange: (mode: 'user' | 'support') => void;
   attachments: Attachment[];
   onAddAttachments: (files: FileList) => void;
   onRemoveAttachment: (id: string) => void;
