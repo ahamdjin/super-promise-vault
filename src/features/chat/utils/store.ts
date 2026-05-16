@@ -13,7 +13,11 @@ type ChatState = {
 
   selectConversation: (id: string) => void;
   setDraft: (text: string) => void;
-  sendMessage: (text: string, attachments?: Attachment[]) => void;
+  sendMessage: (
+    text: string,
+    attachments?: Attachment[],
+    options?: { sender?: Message['sender']; author?: string }
+  ) => void;
   addIncomingMessage: (conversationId: string, message: Message) => void;
   advanceReplyCursor: (conversationId: string) => void;
   getActiveConversation: () => Conversation | undefined;
@@ -36,16 +40,17 @@ export const useChatStore = create<ChatState>()(
 
     setDraft: (text) => set({ draft: text }),
 
-    sendMessage: (text, attachments) => {
+    sendMessage: (text, attachments, options) => {
       const state = get();
       const timestamp = new Date().toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit'
       });
+      const sender = options?.sender ?? 'user';
       const outgoing: Message = {
         id: 'outgoing-' + Date.now().toString(),
-        sender: 'user',
-        author: 'You',
+        sender,
+        author: options?.author ?? (sender === 'internal' ? 'Case note' : 'You'),
         text: text.trim(),
         timestamp,
         attachments: attachments?.length ? attachments : undefined

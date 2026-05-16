@@ -23,13 +23,13 @@ export function Messenger() {
   } = useChatStore();
 
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [composeMode, setComposeMode] = useState<'note' | 'reply'>('note');
   const shouldReduceMotion = useReducedMotion();
   const replyTimeoutRef = useRef<number | null>(null);
-  const selectedRef = useRef(selectedConversationId);
 
   useEffect(() => {
-    selectedRef.current = selectedConversationId;
     setAttachments([]);
+    setComposeMode('note');
   }, [selectedConversationId]);
 
   useEffect(() => {
@@ -61,10 +61,14 @@ export function Messenger() {
       if ((!draft.trim() && attachments.length === 0) || !active) return;
 
       const conversationId = active.id;
-      sendMessage(draft, attachments.length > 0 ? attachments : undefined);
+      const isReply = composeMode === 'reply';
+      sendMessage(draft, attachments.length > 0 ? attachments : undefined, {
+        sender: isReply ? 'user' : 'internal',
+        author: isReply ? 'You' : 'Case note'
+      });
       setAttachments([]);
 
-      const autoReplies = active.autoReplies;
+      const autoReplies = isReply ? active.autoReplies : [];
       if (!autoReplies.length) return;
 
       const cursor = replyCursor[conversationId] ?? 0;
@@ -93,6 +97,7 @@ export function Messenger() {
       attachments,
       replyCursor,
       shouldReduceMotion,
+      composeMode,
       getActiveConversation,
       sendMessage,
       addIncomingMessage,
@@ -120,6 +125,8 @@ export function Messenger() {
         draft={draft}
         onDraftChange={setDraft}
         onSubmit={handleSubmit}
+        composeMode={composeMode}
+        onComposeModeChange={setComposeMode}
         attachments={attachments}
         onAddAttachments={handleAddAttachments}
         onRemoveAttachment={handleRemoveAttachment}

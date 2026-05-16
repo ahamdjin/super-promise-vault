@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useRef } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import type { Attachment, Conversation } from '../utils/types';
 import { ChatHeader } from './chat-header';
+import { CaseSummary } from './case-summary';
 import { MessageBubble } from './message-bubble';
 import { MessageComposer } from './message-composer';
 
@@ -12,6 +13,8 @@ interface ChatAreaProps {
   draft: string;
   onDraftChange: (text: string) => void;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
+  composeMode: 'note' | 'reply';
+  onComposeModeChange: (mode: 'note' | 'reply') => void;
   attachments: Attachment[];
   onAddAttachments: (files: FileList) => void;
   onRemoveAttachment: (id: string) => void;
@@ -22,6 +25,8 @@ export function ChatArea({
   draft,
   onDraftChange,
   onSubmit,
+  composeMode,
+  onComposeModeChange,
   attachments,
   onAddAttachments,
   onRemoveAttachment
@@ -66,12 +71,13 @@ export function ChatArea({
           className='border-border/40 bg-background/80 flex min-h-0 flex-col gap-3 overflow-hidden rounded-2xl border p-3 backdrop-blur sm:gap-4 sm:p-4 lg:col-start-2 lg:col-end-3 lg:rounded-3xl'
         >
           <ChatHeader conversation={conversation} />
+          <CaseSummary conversation={conversation} />
 
           <div
             ref={messagesContainerRef}
             className='[&::-webkit-scrollbar-thumb]:bg-muted relative min-h-0 flex-1 space-y-3 overflow-y-auto pr-2 sm:space-y-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full'
             aria-live='off'
-            aria-label={'Message thread with ' + conversation.name}
+            aria-label={'Support thread for ' + conversation.company}
           >
             <AnimatePresence initial={false}>
               {conversation.messages.map((message) => (
@@ -84,7 +90,9 @@ export function ChatArea({
             draft={draft}
             onDraftChange={onDraftChange}
             onSubmit={onSubmit}
-            contactName={conversation.name}
+            composeMode={composeMode}
+            onComposeModeChange={onComposeModeChange}
+            contactName={conversation.company}
             quickReplies={conversation.quickReplies}
             attachments={attachments}
             onAddAttachments={onAddAttachments}

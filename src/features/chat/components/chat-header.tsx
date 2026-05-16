@@ -2,9 +2,10 @@
 
 import { Icons } from '@/components/icons';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { Conversation } from '../utils/types';
+import type { Conversation, SupportCasePriority, SupportCaseStatus } from '../utils/types';
 
 const statusDotColor = {
   online: 'bg-green-500',
@@ -14,6 +15,19 @@ const statusDotColor = {
 interface ChatHeaderProps {
   conversation: Conversation;
 }
+
+const caseStatusCopy: Record<SupportCaseStatus, string> = {
+  promised: 'Promise Captured',
+  'follow-up-due': 'Follow-up Due',
+  'awaiting-user': 'Waiting on You',
+  resolved: 'Resolved'
+};
+
+const priorityTone: Record<SupportCasePriority, string> = {
+  low: 'Low Priority',
+  medium: 'Medium Priority',
+  high: 'High Priority'
+};
 
 export function ChatHeader({ conversation }: ChatHeaderProps) {
   return (
@@ -34,8 +48,15 @@ export function ChatHeader({ conversation }: ChatHeaderProps) {
           />
         </div>
         <div>
-          <p className='text-foreground text-sm font-semibold sm:text-base'>{conversation.name}</p>
+          <div className='flex flex-wrap items-center gap-2'>
+            <p className='text-foreground text-sm font-semibold sm:text-base'>{conversation.company}</p>
+            <Badge variant='outline'>{conversation.caseId}</Badge>
+            <Badge variant='secondary'>{caseStatusCopy[conversation.caseStatus]}</Badge>
+          </div>
           <p className='text-muted-foreground text-xs sm:text-sm'>{conversation.title}</p>
+          <p className='text-muted-foreground text-[0.7rem] sm:text-xs'>
+            {conversation.name} • {conversation.channel} • {priorityTone[conversation.priority]}
+          </p>
         </div>
       </div>
 

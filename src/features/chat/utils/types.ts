@@ -7,20 +7,33 @@ export type Attachment = {
 
 export type Message = {
   id: string;
-  sender: 'user' | 'contact';
+  sender: 'user' | 'contact' | 'internal';
   author: string;
   text: string;
   timestamp: string;
   attachments?: Attachment[];
 };
 
-export type ConversationStatus = 'online' | 'offline';
+export type ContactStatus = 'online' | 'offline';
+export type SupportCaseStatus = 'promised' | 'follow-up-due' | 'awaiting-user' | 'resolved';
+export type SupportCasePriority = 'low' | 'medium' | 'high';
 
 export type Conversation = {
   id: string;
+  company: string;
   name: string;
   title: string;
-  status: ConversationStatus;
+  caseId: string;
+  sourceUrl: string;
+  channel: 'chat' | 'email' | 'web-form';
+  status: ContactStatus;
+  caseStatus: SupportCaseStatus;
+  priority: SupportCasePriority;
+  promisedOutcome: string;
+  amountLabel: string;
+  followUpAt: string;
+  nextAction: string;
+  proofLabel: string;
   unread: number;
   initials: string;
   messages: Message[];

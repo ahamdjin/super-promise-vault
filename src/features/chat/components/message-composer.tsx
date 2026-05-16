@@ -11,6 +11,8 @@ interface MessageComposerProps {
   draft: string;
   onDraftChange: (text: string) => void;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
+  composeMode: 'note' | 'reply';
+  onComposeModeChange: (mode: 'note' | 'reply') => void;
   contactName: string;
   quickReplies: string[];
   attachments: Attachment[];
@@ -22,6 +24,8 @@ export function MessageComposer({
   draft,
   onDraftChange,
   onSubmit,
+  composeMode,
+  onComposeModeChange,
   contactName,
   quickReplies,
   attachments,
@@ -31,12 +35,41 @@ export function MessageComposer({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <form onSubmit={onSubmit} className='space-y-2 sm:space-y-3' aria-label='Reply composer'>
+    <form onSubmit={onSubmit} className='space-y-2 sm:space-y-3' aria-label='Case composer'>
       <label htmlFor='messenger-editor' className='sr-only'>
-        Write a message
+        {composeMode === 'note' ? 'Add a case note' : 'Draft a support reply'}
       </label>
       <div className='border-border/40 bg-background/80 flex items-end gap-2 rounded-2xl border p-3 backdrop-blur sm:gap-3 sm:rounded-3xl sm:p-4'>
         <div className='min-w-0 flex-1'>
+          <div className='mb-2 flex flex-wrap gap-2'>
+            <button
+              type='button'
+              onClick={() => onComposeModeChange('note')}
+              className={`inline-flex rounded-full px-2.5 py-1 text-[0.65rem] uppercase tracking-[0.18em] ${
+                composeMode === 'note'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              Case note
+            </button>
+            <button
+              type='button'
+              onClick={() => onComposeModeChange('reply')}
+              className={`inline-flex rounded-full px-2.5 py-1 text-[0.65rem] uppercase tracking-[0.18em] ${
+                composeMode === 'reply'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              Support reply
+            </button>
+            <span className='text-muted-foreground inline-flex items-center text-[0.7rem]'>
+              {composeMode === 'note'
+                ? 'Save evidence context, next actions, or internal follow-up notes.'
+                : 'Draft the next message you want to send to support.'}
+            </span>
+          </div>
           {attachments.length > 0 && (
             <FilePreview
               files={attachments.map((a) => ({
@@ -61,10 +94,18 @@ export function MessageComposer({
                 }
               }
             }}
-            placeholder={'Message ' + contactName + ' (Enter to send, Shift+Enter for newline)'}
+            placeholder={
+              composeMode === 'note'
+                ? 'Add a note for ' + contactName + ' (Enter to save, Shift+Enter for newline)'
+                : 'Draft a reply to ' + contactName + ' (Enter to send, Shift+Enter for newline)'
+            }
             rows={2}
             className='text-foreground placeholder:text-muted-foreground/70 min-h-[3rem] w-full resize-none border-none bg-transparent text-xs focus-visible:ring-0 focus-visible:outline-none sm:min-h-[4rem] sm:text-sm'
-            aria-label={'Message ' + contactName}
+            aria-label={
+              composeMode === 'note'
+                ? 'Add a note for ' + contactName
+                : 'Draft a reply to ' + contactName
+            }
           />
           <div className='mt-2 flex flex-wrap gap-1.5 sm:mt-3 sm:gap-2'>
             {quickReplies.map((reply) => (
@@ -108,7 +149,7 @@ export function MessageComposer({
             size='icon'
             className='bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-primary/40 focus-visible:ring-offset-background size-8 rounded-full shadow-lg transition focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:size-10'
             disabled={!draft.trim() && attachments.length === 0}
-            aria-label='Send message'
+            aria-label={composeMode === 'note' ? 'Save note' : 'Send reply'}
           >
             <Icons.send className='h-3.5 w-3.5 sm:h-4 sm:w-4' aria-hidden='true' />
           </Button>

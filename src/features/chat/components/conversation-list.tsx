@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import type { Conversation } from '../utils/types';
+import type { Conversation, SupportCaseStatus } from '../utils/types';
 
 const statusDotColor = {
   online: 'bg-green-500',
@@ -20,6 +20,13 @@ interface ConversationListProps {
   onSelect: (id: string) => void;
 }
 
+const caseStatusCopy: Record<SupportCaseStatus, string> = {
+  promised: 'Promise',
+  'follow-up-due': 'Due',
+  'awaiting-user': 'You',
+  resolved: 'Closed'
+};
+
 export function ConversationList({ conversations, selectedId, onSelect }: ConversationListProps) {
   const [search, setSearch] = useState('');
 
@@ -27,7 +34,11 @@ export function ConversationList({ conversations, selectedId, onSelect }: Conver
     if (!search.trim()) return conversations;
     const q = search.toLowerCase();
     return conversations.filter(
-      (c) => c.name.toLowerCase().includes(q) || c.title.toLowerCase().includes(q)
+      (c) =>
+        c.company.toLowerCase().includes(q) ||
+        c.name.toLowerCase().includes(q) ||
+        c.title.toLowerCase().includes(q) ||
+        c.caseId.toLowerCase().includes(q)
     );
   }, [conversations, search]);
 
@@ -35,22 +46,21 @@ export function ConversationList({ conversations, selectedId, onSelect }: Conver
     <div className='border-border/40 bg-background/75 hidden h-full flex-col gap-4 overflow-hidden rounded-2xl border p-3 backdrop-blur lg:col-start-1 lg:col-end-2 lg:flex lg:rounded-3xl lg:p-4'>
       <div className='flex items-center justify-between gap-3'>
         <div>
-          <p className='text-foreground text-sm font-semibold'>Messenger</p>
+          <p className='text-foreground text-sm font-semibold'>Support Cases</p>
           <p className='text-muted-foreground text-xs'>
-            {conversations.length} active conversation
-            {conversations.length === 1 ? '' : 's'}
+            {conversations.length} tracked case{conversations.length === 1 ? '' : 's'}
           </p>
         </div>
         <Badge
           variant='outline'
           className='bg-primary/15 text-primary hover:bg-primary/15 hover:text-primary border-border/50 rounded-full border px-3 py-1 text-[0.7rem] tracking-[0.24em] uppercase'
         >
-          Live
+          Queue
         </Badge>
       </div>
 
       <label htmlFor='messenger-search' className='sr-only'>
-        Search conversations
+        Search cases
       </label>
       <div className='relative'>
         <Icons.search
@@ -62,7 +72,7 @@ export function ConversationList({ conversations, selectedId, onSelect }: Conver
           type='search'
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder='Search conversations'
+          placeholder='Search cases'
           className='border-border/40 bg-background/60 text-foreground placeholder:text-muted-foreground/70 focus-visible:ring-primary/40 w-full rounded-2xl pl-10 text-sm focus-visible:ring-2'
         />
       </div>
@@ -73,7 +83,7 @@ export function ConversationList({ conversations, selectedId, onSelect }: Conver
         role='list'
       >
         {filtered.length === 0 ? (
-          <p className='text-muted-foreground py-8 text-center text-xs'>No conversations found</p>
+          <p className='text-muted-foreground py-8 text-center text-xs'>No cases found</p>
         ) : null}
         {filtered.map((conversation) => {
           const isActive = conversation.id === selectedId;
@@ -109,7 +119,15 @@ export function ConversationList({ conversations, selectedId, onSelect }: Conver
               <div className='min-w-0 flex-1 space-y-1'>
                 <div className='flex items-start justify-between gap-2'>
                   <div className='min-w-0 flex-1'>
-                    <p className='text-foreground text-sm font-semibold'>{conversation.name}</p>
+                    <div className='flex flex-wrap items-center gap-2'>
+                      <p className='text-foreground text-sm font-semibold'>{conversation.company}</p>
+                      <Badge variant='outline' className='h-5 rounded-full px-2 text-[0.65rem]'>
+                        {conversation.caseId}
+                      </Badge>
+                      <Badge variant='secondary' className='h-5 rounded-full px-2 text-[0.65rem]'>
+                        {caseStatusCopy[conversation.caseStatus]}
+                      </Badge>
+                    </div>
                     <p className='text-muted-foreground text-xs'>{conversation.title}</p>
                   </div>
                   {lastMessage && (
@@ -125,6 +143,9 @@ export function ConversationList({ conversations, selectedId, onSelect }: Conver
                 ) : (
                   <p className='text-muted-foreground text-xs'>No messages yet</p>
                 )}
+                <p className='text-muted-foreground text-[0.7rem]'>
+                  Follow up {conversation.followUpAt} • {conversation.amountLabel}
+                </p>
               </div>
               {conversation.unread > 0 && (
                 <span className='bg-primary text-primary-foreground ml-2 inline-flex min-h-[1.5rem] min-w-[1.5rem] items-center justify-center rounded-full text-[0.7rem] font-semibold shadow-lg'>
