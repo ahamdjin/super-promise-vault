@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { CaseCard } from '@/components/case-card';
+import { CaseList } from '@/components/case-list';
 import { SessionActions } from '@/components/session-actions';
 import { mockCases } from '@/lib/mock-cases';
 import { createClient } from '@/lib/supabase/server';
@@ -15,10 +15,10 @@ export default async function DemoPage() {
   }
 
   const waitingCases = mockCases.filter((item) => item.status === 'waiting');
-  const promisedCases = mockCases.filter((item) => item.status === 'promised');
   const waitingCount = mockCases.filter((item) => item.status === 'waiting').length;
   const promisedCount = mockCases.filter((item) => item.status === 'promised').length;
   const focusQueue = [...mockCases].sort((left, right) => left.followUp.localeCompare(right.followUp));
+  const primaryCase = focusQueue[0];
   const providerMix = Array.from(new Set(mockCases.map((item) => item.provider)));
 
   return (
@@ -46,7 +46,7 @@ export default async function DemoPage() {
 
         <div className="demo-sidebar__note">
           <span className="eyebrow">Current mode</span>
-          <p>Auth is live. Dashboard data is still mocked until the first Supabase write flow is connected.</p>
+          <p>Auth is live. This screen is the operator shell we will connect to live support cases next.</p>
         </div>
       </aside>
 
@@ -54,10 +54,9 @@ export default async function DemoPage() {
         <header className="demo-topbar" id="overview">
           <div className="demo-topbar__copy">
             <p className="eyebrow">Overview</p>
-            <h1>Cases that still need proof, timing, or follow-up.</h1>
+            <h1>Track the promises that are easiest for support teams to forget.</h1>
             <p>
-              Keep the screen useful: who promised what, how much is at stake, and which case needs the
-              next move first.
+              The job of this screen is simple: hold proof, show urgency, and keep the next follow-up obvious.
             </p>
           </div>
           <SessionActions email={user.email ?? 'Signed in user'} />
@@ -67,17 +66,17 @@ export default async function DemoPage() {
           <article>
             <span>Open cases</span>
             <strong>{mockCases.length}</strong>
-            <p>All saved promises currently tracked in the dashboard.</p>
+            <p>Saved promises that still need verification, refund confirmation, or escalation.</p>
           </article>
           <article>
             <span>Due soon</span>
             <strong>{waitingCount}</strong>
-            <p>Cases waiting on a refund, replacement, or next support reply.</p>
+            <p>Follow-ups that should stay visible before the support trail goes cold.</p>
           </article>
           <article>
             <span>Stable</span>
             <strong>{promisedCount}</strong>
-            <p>Promises saved but not urgent yet.</p>
+            <p>Cases with proof saved already, but not urgent enough to lead the queue.</p>
           </article>
         </section>
 
@@ -94,75 +93,67 @@ export default async function DemoPage() {
           </div>
           <div>
             <span className="demo-status-strip__label">Data source</span>
-            <strong>Mock dashboard data</strong>
+            <strong>Mock cases for layout validation</strong>
           </div>
           <div>
             <span className="demo-status-strip__label">Next build step</span>
-            <strong>Replace this board with Supabase reads</strong>
+            <strong>Supabase read + create-case flow</strong>
           </div>
         </section>
 
         <section className="demo-grid" id="board">
-          <div className="demo-board">
-            <section className="demo-column">
-              <div className="demo-column__header">
-                <div>
-                  <span className="demo-column__label">Needs follow-up</span>
-                  <h2>Waiting</h2>
-                </div>
-                <strong>{waitingCases.length}</strong>
+          <section className="demo-board-panel">
+            <div className="demo-board-panel__header">
+              <div>
+                <span className="demo-column__label">Primary queue</span>
+                <h2>Active cases</h2>
               </div>
-              <p className="demo-column__hint">Cases that should stay visible until the promised outcome lands.</p>
-              <div className="demo-column__stack">
-                {waitingCases.map((item) => (
-                  <CaseCard
-                    key={item.id}
-                    company={item.company}
-                    provider={item.provider}
-                    promise={item.promise}
-                    summary={item.summary}
-                    followUp={item.followUp}
-                    status={item.status}
-                    amount={item.amount}
-                  />
-                ))}
+              <div className="demo-board-panel__filters">
+                <span className="demo-filter demo-filter--active">All</span>
+                <span className="demo-filter">Waiting</span>
+                <span className="demo-filter">Promised</span>
               </div>
-            </section>
-
-            <section className="demo-column">
-              <div className="demo-column__header">
-                <div>
-                  <span className="demo-column__label">Saved, not urgent</span>
-                  <h2>Promised</h2>
-                </div>
-                <strong>{promisedCases.length}</strong>
-              </div>
-              <p className="demo-column__hint">Cases with clean proof saved, but no immediate follow-up required.</p>
-              <div className="demo-column__stack">
-                {promisedCases.map((item) => (
-                  <CaseCard
-                    key={item.id}
-                    company={item.company}
-                    provider={item.provider}
-                    promise={item.promise}
-                    summary={item.summary}
-                    followUp={item.followUp}
-                    status={item.status}
-                    amount={item.amount}
-                  />
-                ))}
-              </div>
-            </section>
-          </div>
+            </div>
+            <p className="demo-column__hint">
+              A cleaner operator view than stacked cards: scan company, promise, amount, due date, and state in one pass.
+            </p>
+            <CaseList items={focusQueue} />
+          </section>
 
           <aside className="demo-focus" id="focus">
             <section className="demo-panel">
               <div className="demo-panel__header">
-                <span className="eyebrow">Focus queue</span>
+                <span className="eyebrow">Case spotlight</span>
+                <h2>Focus item</h2>
+              </div>
+              <div className="demo-focus-card">
+                <span className="case-list__chip">{primaryCase.provider}</span>
+                <h3>{primaryCase.company}</h3>
+                <p>{primaryCase.promise}</p>
+                <div className="demo-focus-card__grid">
+                  <div>
+                    <span>Amount</span>
+                    <strong>{primaryCase.amount}</strong>
+                  </div>
+                  <div>
+                    <span>Follow up</span>
+                    <strong>{primaryCase.followUp}</strong>
+                  </div>
+                </div>
+                <div className="demo-focus-card__story">
+                  <span>Saved note</span>
+                  <p>{primaryCase.summary}</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="demo-panel">
+              <div className="demo-panel__header">
+                <span className="eyebrow">Upcoming</span>
                 <h2>Next actions</h2>
               </div>
               <div className="demo-focus-list">
-                {focusQueue.map((item) => (
+                {waitingCases.map((item) => (
                   <article key={item.id} className="demo-focus-item">
                     <div>
                       <strong>{item.company}</strong>
@@ -176,13 +167,13 @@ export default async function DemoPage() {
 
             <section className="demo-panel">
               <div className="demo-panel__header">
-                <span className="eyebrow">Operator notes</span>
-                <h2>What this screen should become</h2>
+                <span className="eyebrow">Build queue</span>
+                <h2>Next product step</h2>
               </div>
               <ul className="demo-checklist">
-                <li>Real cases from Supabase instead of static mock objects.</li>
-                <li>One clean create-case flow from the web before extension sync.</li>
-                <li>Proof attachments and transcript preview in the side panel.</li>
+                <li>Read real cases from Supabase instead of static mock rows.</li>
+                <li>Create one deliberate case-create flow before extension sync.</li>
+                <li>Use this right rail for transcript proof and follow-up history.</li>
               </ul>
             </section>
           </aside>
