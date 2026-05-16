@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -47,6 +48,10 @@ export function CaseSummary({ conversation }: CaseSummaryProps) {
     [conversation.caseAttachments]
   );
 
+  const primaryPreview = conversation.caseAttachments.find(
+    (attachment) => attachment.type.startsWith('image/') && attachment.url
+  );
+
   return (
     <div className='border-border/40 bg-background/60 rounded-2xl border px-4 py-3'>
       <div className='flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between'>
@@ -75,13 +80,46 @@ export function CaseSummary({ conversation }: CaseSummaryProps) {
               </DialogHeader>
               <div className='space-y-4'>
                 <FilePreview files={attachmentFiles} />
+                {primaryPreview?.url ? (
+                  <div className='overflow-hidden rounded-xl border'>
+                    <Image
+                      src={primaryPreview.url}
+                      alt={primaryPreview.name}
+                      width={1400}
+                      height={900}
+                      className='h-auto w-full object-cover'
+                    />
+                  </div>
+                ) : null}
                 <div className='grid gap-3'>
                   {conversation.caseAttachments.map((attachment) => (
                     <div key={attachment.id} className='rounded-xl border p-3'>
-                      <p className='text-sm font-medium'>{attachment.name}</p>
-                      <p className='text-muted-foreground text-xs'>
-                        {attachment.description || 'Saved case proof'}
-                      </p>
+                      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+                        <div className='space-y-1'>
+                          <p className='text-sm font-medium'>{attachment.name}</p>
+                          <p className='text-muted-foreground text-xs'>
+                            {attachment.description || 'Saved case proof'}
+                          </p>
+                        </div>
+                        <div className='flex flex-wrap gap-2'>
+                          {attachment.url ? (
+                            <Button asChild variant='outline' size='sm'>
+                              <a href={attachment.url} target='_blank' rel='noreferrer'>
+                                <Icons.externalLink className='size-4' />
+                                View
+                              </a>
+                            </Button>
+                          ) : null}
+                          {attachment.url ? (
+                            <Button asChild size='sm'>
+                              <a href={attachment.url} download>
+                                <Icons.download className='size-4' />
+                                Download
+                              </a>
+                            </Button>
+                          ) : null}
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>

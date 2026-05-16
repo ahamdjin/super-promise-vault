@@ -20,16 +20,18 @@ export const initialConversations: Conversation[] = [
     caseAttachments: [
       {
         id: 'loom-proof-1',
-        name: 'refund-confirmation.pdf',
+        name: 'refund-confirmation.txt',
         size: 182400,
-        type: 'application/pdf',
+        type: 'text/plain',
+        url: '/demo-proof/loom-refund-confirmation.txt',
         description: 'Refund confirmation shared by support'
       },
       {
         id: 'loom-proof-2',
-        name: 'billing-screenshot.png',
+        name: 'billing-screenshot.svg',
         size: 224100,
-        type: 'image/png',
+        type: 'image/svg+xml',
+        url: '/demo-proof/loom-billing-screenshot.svg',
         description: 'Screenshot of duplicate charge'
       }
     ],
@@ -90,16 +92,18 @@ export const initialConversations: Conversation[] = [
     caseAttachments: [
       {
         id: 'apollo-proof-1',
-        name: 'trial-conversion-email.eml',
+        name: 'trial-followup.txt',
         size: 98304,
-        type: 'message/rfc822',
+        type: 'text/plain',
+        url: '/demo-proof/apollo-trial-followup.txt',
         description: 'Billing conversion email'
       },
       {
         id: 'apollo-proof-2',
-        name: 'cancel-attempt.png',
+        name: 'cancel-attempt.svg',
         size: 197632,
-        type: 'image/png',
+        type: 'image/svg+xml',
+        url: '/demo-proof/apollo-cancel-attempt.svg',
         description: 'Cancellation attempt timing screenshot'
       }
     ],
@@ -156,6 +160,7 @@ export const initialConversations: Conversation[] = [
         name: 'security-confirmation.txt',
         size: 1200,
         type: 'text/plain',
+        url: '/demo-proof/notion-security-confirmation.txt',
         description: 'Confirmation note from security agent'
       }
     ],

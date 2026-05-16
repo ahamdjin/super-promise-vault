@@ -1,0 +1,9 @@
+Refund confirmation
+
+Merchant: Loom
+Case ID: LM-4821
+Promise: Duplicate annual renewal charge refunded
+Amount: $96.00
+Expected timing: Pending credit within 24 hours, full refund in 3 to 5 business days
+
+Saved as demo proof for the Support Promise Vault attachment viewer.

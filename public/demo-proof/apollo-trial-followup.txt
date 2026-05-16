@@ -1,0 +1,7 @@
+Billing follow-up note
+
+Merchant: Apollo
+Case ID: AP-2240
+Issue: Trial converted before intended cancellation
+Requested outcome: Courtesy refund and downgrade
+Recommended next action: Send follow-up with cancellation timing screenshot attached.

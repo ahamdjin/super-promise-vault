@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" fill="none">
+  <rect width="1200" height="760" rx="28" fill="#F6F8FB"/>
+  <rect x="48" y="52" width="1104" height="84" rx="20" fill="#0F172A"/>
+  <circle cx="96" cy="94" r="18" fill="#22C55E"/>
+  <rect x="132" y="78" width="260" height="12" rx="6" fill="#E2E8F0"/>
+  <rect x="132" y="100" width="180" height="10" rx="5" fill="#94A3B8"/>
+  <rect x="48" y="168" width="1104" height="544" rx="24" fill="white"/>
+  <rect x="88" y="212" width="328" height="208" rx="20" fill="#FFF7ED" stroke="#FDBA74"/>
+  <text x="112" y="252" fill="#9A3412" font-family="Arial, sans-serif" font-size="24" font-weight="700">Duplicate Charge Alert</text>
+  <text x="112" y="294" fill="#7C2D12" font-family="Arial, sans-serif" font-size="18">Annual Pro plan was billed twice on renewal.</text>
+  <rect x="112" y="324" width="144" height="40" rx="12" fill="#FB923C"/>
+  <text x="152" y="350" fill="white" font-family="Arial, sans-serif" font-size="18" font-weight="700">$96.00</text>
+  <rect x="456" y="212" width="656" height="112" rx="18" fill="#F8FAFC" stroke="#CBD5E1"/>
+  <text x="486" y="252" fill="#0F172A" font-family="Arial, sans-serif" font-size="22" font-weight="700">Support promise captured</text>
+  <text x="486" y="290" fill="#334155" font-family="Arial, sans-serif" font-size="18">Refund initiated for duplicate annual renewal charge.</text>
+  <rect x="456" y="350" width="656" height="132" rx="18" fill="#F8FAFC" stroke="#CBD5E1"/>
+  <text x="486" y="390" fill="#0F172A" font-family="Arial, sans-serif" font-size="22" font-weight="700">Follow-up date</text>
+  <text x="486" y="428" fill="#334155" font-family="Arial, sans-serif" font-size="18">Expected pending credit within 24 hours.</text>
+  <text x="486" y="456" fill="#334155" font-family="Arial, sans-serif" font-size="18">Full refund ETA: 3 to 5 business days.</text>
+  <rect x="456" y="510" width="656" height="156" rx="18" fill="#EFF6FF" stroke="#93C5FD"/>
+  <text x="486" y="550" fill="#1D4ED8" font-family="Arial, sans-serif" font-size="22" font-weight="700">Saved for Support Promise Vault demo</text>
+  <text x="486" y="590" fill="#1E3A8A" font-family="Arial, sans-serif" font-size="18">This file exists so attachments can be previewed and downloaded in the UI.</text>
+</svg>

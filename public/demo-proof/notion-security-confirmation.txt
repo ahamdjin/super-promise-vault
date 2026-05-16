@@ -1,0 +1,6 @@
+Security confirmation
+
+Merchant: Notion
+Case ID: NT-9031
+Outcome: Unknown session revoked and extra account verification enabled
+Status: Resolved

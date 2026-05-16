@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" fill="none">
+  <rect width="1200" height="760" rx="28" fill="#F8FAFC"/>
+  <rect x="60" y="56" width="1080" height="648" rx="28" fill="white" stroke="#CBD5E1"/>
+  <text x="108" y="128" fill="#0F172A" font-family="Arial, sans-serif" font-size="28" font-weight="700">Cancellation Attempt Timeline</text>
+  <text x="108" y="166" fill="#475569" font-family="Arial, sans-serif" font-size="18">Saved proof for trial conversion follow-up</text>
+  <rect x="108" y="220" width="984" height="96" rx="18" fill="#F8FAFC" stroke="#CBD5E1"/>
+  <text x="144" y="268" fill="#0F172A" font-family="Arial, sans-serif" font-size="20" font-weight="700">May 14 • 11:42 PM</text>
+  <text x="144" y="298" fill="#475569" font-family="Arial, sans-serif" font-size="18">User opened billing settings and intended to cancel trial before renewal.</text>
+  <rect x="108" y="346" width="984" height="96" rx="18" fill="#FFF7ED" stroke="#FDBA74"/>
+  <text x="144" y="394" fill="#9A3412" font-family="Arial, sans-serif" font-size="20" font-weight="700">May 15 • 12:01 AM</text>
+  <text x="144" y="424" fill="#7C2D12" font-family="Arial, sans-serif" font-size="18">Trial converted before expected cancellation was completed.</text>
+  <rect x="108" y="472" width="984" height="164" rx="18" fill="#EFF6FF" stroke="#93C5FD"/>
+  <text x="144" y="520" fill="#1D4ED8" font-family="Arial, sans-serif" font-size="22" font-weight="700">Follow-up proof</text>
+  <text x="144" y="560" fill="#1E3A8A" font-family="Arial, sans-serif" font-size="18">Use this screenshot to support a courtesy refund request and downgrade case.</text>
+  <text x="144" y="592" fill="#1E3A8A" font-family="Arial, sans-serif" font-size="18">This asset is intentionally static so the app can preview and download it.</text>
+</svg>
