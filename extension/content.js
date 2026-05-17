@@ -1,5 +1,10 @@
 const PROVIDERS = [
   {
+    id: "tawk",
+    name: "tawk.to",
+    selectors: ['script[src*="tawk"]', '[id*="tawk"]', '[class*="tawk"]']
+  },
+  {
     id: "zendesk",
     name: "Zendesk",
     selectors: [
@@ -149,7 +154,7 @@ function findBestProviderFrame() {
     .map((frame) => {
       const idAndClass = `${frame.id} ${frame.className} ${frame.name || ""} ${frame.src || ""}`.toLowerCase()
       let score = 0
-      if (/intercom|zendesk|zopim|helpscout|beacon|gorgias/.test(idAndClass)) {
+      if (/intercom|zendesk|zopim|helpscout|beacon|gorgias|tawk/.test(idAndClass)) {
         score += 10
       }
       if (/chat|support|message|conversation|widget/.test(idAndClass)) {
@@ -159,6 +164,18 @@ function findBestProviderFrame() {
       const rect = frame.getBoundingClientRect()
       if (rect.width > 260 && rect.height > 220) {
         score += 4
+      }
+      if (rect.width >= 300 && rect.height >= 260 && rect.right >= window.innerWidth - 80) {
+        score += 8
+      }
+      if (rect.bottom >= window.innerHeight - 40) {
+        score += 3
+      }
+      if ((frame.getAttribute("src") || "").toLowerCase() === "about:blank") {
+        score += 2
+      }
+      if (rect.width <= 90 && rect.height <= 90 && rect.right >= window.innerWidth - 10) {
+        score -= 8
       }
 
       return { frame, score }
