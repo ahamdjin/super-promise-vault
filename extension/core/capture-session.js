@@ -25,6 +25,7 @@
       label: global.SPV.cleanText(attachment.label || "Attachment"),
       url: attachment.url || "",
       source: attachment.source || "dom",
+      proofRef: attachment.proofRef || "",
       confidence: attachment.confidence ?? 0.65
     }
   }
@@ -32,13 +33,14 @@
   function createCaptureSession({
     pageContext,
     pageProof,
+    fullCaptureResult,
     formValues,
     strategy,
     providerAdapter
   }) {
     const createdAt = global.SPV.isoNow()
     const transcriptText = pageContext?.transcript || pageContext?.selection || ""
-    const transcriptChunks = transcriptText
+    const quickChunks = transcriptText
       ? [
           createTranscriptChunk({
             index: 0,
@@ -50,8 +52,21 @@
           })
         ]
       : []
+    const transcriptChunks = Array.isArray(fullCaptureResult?.chunks) && fullCaptureResult.chunks.length
+      ? fullCaptureResult.chunks.map((chunk, index) =>
+          createTranscriptChunk({
+            index,
+            sourceType: chunk.sourceType || "dom-scroll",
+            text: chunk.text || "",
+            rect: chunk.rect || null,
+            screenshotRef: chunk.screenshotRef || pageProof?.filename || null,
+            confidence: chunk.confidence ?? 0.75
+          })
+        )
+      : quickChunks
 
-    const attachments = (pageContext?.attachments || []).map((attachment, index) =>
+    const attachmentSource = fullCaptureResult?.attachments?.length ? fullCaptureResult.attachments : pageContext?.attachments || []
+    const attachments = attachmentSource.map((attachment, index) =>
       createAttachmentRecord(attachment, index)
     )
 
@@ -83,9 +98,11 @@
       },
       transcript: {
         chunks: transcriptChunks,
-        stitchedText: transcriptChunks.map((chunk) => chunk.text).join("\n"),
-        needsMoreCapture: strategy.mode !== "dom-complete",
-        ocrText: ""
+        stitchedText:
+          global.SPV.cleanText(fullCaptureResult?.stitchedText || "") ||
+          transcriptChunks.map((chunk) => chunk.text).join("\n"),
+        needsMoreCapture: fullCaptureResult?.status === "needs-ocr" || strategy.mode !== "dom-complete",
+        ocrText: fullCaptureResult?.ocrText || ""
       },
       assets: {
         proofs: pageProof ? [pageProof] : [],
@@ -94,7 +111,8 @@
       raw: {
         selection: pageContext?.selection || "",
         issueTitleGuess: pageContext?.issueTitleGuess || "",
-        proofTargetRect: pageContext?.proofTargetRect || null
+        proofTargetRect: pageContext?.proofTargetRect || null,
+        frameCapture: pageContext?.frameCapture || fullCaptureResult?.frameCapture || null
       }
     }
 

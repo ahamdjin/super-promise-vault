@@ -177,6 +177,96 @@ function extractTranscript(element) {
   return lines.slice(0, 24).join("\n")
 }
 
+function findScrollableChatElement(transcriptElement) {
+  let current = transcriptElement
+
+  while (current instanceof HTMLElement) {
+    const style = window.getComputedStyle(current)
+    const isScrollable = /(auto|scroll|overlay)/.test(style.overflowY || "")
+    if (isScrollable && current.scrollHeight > current.clientHeight + 40) {
+      return current
+    }
+    current = current.parentElement
+  }
+
+  return transcriptElement instanceof HTMLElement ? transcriptElement : null
+}
+
+function isNodeVisibleWithinContainer(node, containerRect) {
+  if (!(node instanceof HTMLElement) || !isVisible(node)) {
+    return false
+  }
+
+  const rect = node.getBoundingClientRect()
+  if (!rect.height || !rect.width) {
+    return false
+  }
+
+  return rect.bottom >= containerRect.top && rect.top <= containerRect.bottom
+}
+
+function extractVisibleTranscriptChunk(element) {
+  if (!(element instanceof HTMLElement)) {
+    return ""
+  }
+
+  const containerRect = element.getBoundingClientRect()
+  const lineSelectors = [
+    '[data-message-author-role]',
+    '[class*="message"]',
+    '[class*="bubble"]',
+    '[class*="line"]',
+    "article",
+    "li",
+    "p",
+    "div"
+  ]
+
+  const lines = []
+  const seen = new Set()
+
+  lineSelectors.forEach((selector) => {
+    element.querySelectorAll(selector).forEach((node) => {
+      if (!isNodeVisibleWithinContainer(node, containerRect)) {
+        return
+      }
+
+      const text = normalizeText(node.innerText || "")
+      if (text.length < 8 || seen.has(text)) {
+        return
+      }
+
+      seen.add(text)
+      lines.push(text)
+    })
+  })
+
+  return lines.join("\n")
+}
+
+function stitchTranscriptChunks(chunks) {
+  const lines = []
+  const seen = new Set()
+
+  chunks.forEach((chunk) => {
+    String(chunk.text || "")
+      .split(/\n+/)
+      .map((line) => normalizeText(line))
+      .filter(Boolean)
+      .forEach((line) => {
+        const key = line.toLowerCase()
+        if (seen.has(key)) {
+          return
+        }
+
+        seen.add(key)
+        lines.push(line)
+      })
+  })
+
+  return lines.join("\n")
+}
+
 function extractAttachments(element) {
   if (!element) {
     return []
@@ -254,7 +344,7 @@ function detectProvider() {
   PROVIDERS.forEach((provider) => {
     let score = 0
 
-    provider.selectors.forEach((selector) => {
+    ;(provider.selectors || []).forEach((selector) => {
       try {
         if (document.querySelector(selector)) {
           score += 3
@@ -341,8 +431,100 @@ function getPageContext() {
   }
 }
 
+async function runFullCapture() {
+  const transcriptElement = findBestTranscriptElement()
+  const scrollableElement = findScrollableChatElement(transcriptElement)
+  const providerFrame = findBestProviderFrame()
+
+  if (!(scrollableElement instanceof HTMLElement)) {
+    return {
+      status: providerFrame ? "needs-ocr" : "unsupported",
+      reason: providerFrame
+        ? "Visible chat frame found, but transcript is locked. OCR fallback is required."
+        : "No readable chat thread found for full capture on this page.",
+      chunks: [],
+      attachments: []
+    }
+  }
+
+  const maxScrollTop = Math.max(0, scrollableElement.scrollHeight - scrollableElement.clientHeight)
+  const steps = []
+  const stepSize = Math.max(180, Math.floor(scrollableElement.clientHeight * 0.6))
+
+  for (let offset = 0; offset <= maxScrollTop; offset += stepSize) {
+    steps.push(Math.min(offset, maxScrollTop))
+    if (steps.length > 24) {
+      break
+    }
+  }
+
+  if (!steps.length) {
+    steps.push(0)
+  }
+
+  const originalScrollTop = scrollableElement.scrollTop
+  const chunks = []
+  const seen = new Set()
+
+  for (let index = 0; index < steps.length; index += 1) {
+    const targetTop = steps[index]
+    scrollableElement.scrollTop = targetTop
+    await new Promise((resolve) => window.setTimeout(resolve, 120))
+
+    const text = extractVisibleTranscriptChunk(scrollableElement)
+    const normalized = normalizeText(text)
+
+    if (!normalized || seen.has(normalized)) {
+      continue
+    }
+
+    seen.add(normalized)
+    chunks.push({
+      index,
+      sourceType: "dom-scroll",
+      text,
+      rect: getElementRect(scrollableElement),
+      scrollTop: targetTop,
+      confidence: 0.82
+    })
+  }
+
+  scrollableElement.scrollTop = originalScrollTop
+
+  const stitchedText = stitchTranscriptChunks(chunks)
+  const attachments = extractAttachments(scrollableElement)
+
+  return {
+    status: chunks.length ? "completed" : "unsupported",
+    reason: chunks.length ? "Full-thread DOM capture completed." : "No readable chunks were collected.",
+    chunks,
+    stitchedText,
+    attachments,
+    scroll: {
+      maxScrollTop,
+      clientHeight: scrollableElement.clientHeight,
+      scrollHeight: scrollableElement.scrollHeight
+    }
+  }
+}
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === "spv:getPageContext") {
     sendResponse(getPageContext())
+    return
+  }
+
+  if (message?.type === "spv:runFullCapture") {
+    runFullCapture()
+      .then((result) => sendResponse(result))
+      .catch((error) =>
+        sendResponse({
+          status: "failed",
+          reason: error?.message || "Full capture failed.",
+          chunks: [],
+          attachments: []
+        })
+      )
+    return true
   }
 })

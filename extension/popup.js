@@ -6,6 +6,7 @@ const state = {
   pageContext: null,
   pageProof: null,
   captureStrategy: null,
+  fullCaptureResult: null,
   lastSavedCapture: null,
   previewCapture: null
 }
@@ -36,6 +37,8 @@ const els = {
   feedback: document.getElementById("feedback"),
   recentCaptures: document.getElementById("recent-captures"),
   form: document.getElementById("capture-form"),
+  runFullCaptureButton: document.getElementById("run-full-capture"),
+  useQuickCaptureButton: document.getElementById("use-quick-capture"),
   refreshButton: document.getElementById("refresh-page"),
   exportButton: document.getElementById("export-case"),
   clearButton: document.getElementById("clear-captures"),
@@ -66,6 +69,11 @@ async function init() {
 
 function bindEvents() {
   els.form.addEventListener("submit", onSaveCapture)
+  els.runFullCaptureButton.addEventListener("click", onRunFullCapture)
+  els.useQuickCaptureButton.addEventListener("click", () => {
+    state.fullCaptureResult = null
+    setFeedback("Quick capture mode selected.")
+  })
   els.refreshButton.addEventListener("click", async () => {
     await hydrateCurrentTab()
     setFeedback("Auto-capture refreshed.")
@@ -120,7 +128,8 @@ async function hydrateCurrentTab() {
 
   let pageContext = null
   try {
-    pageContext = await chrome.tabs.sendMessage(tab.id, { type: "spv:getPageContext" })
+    const pageContexts = await sendMessageToAllFrames(tab.id, { type: "spv:getPageContext" })
+    pageContext = mergeFrameContexts(pageContexts)
   } catch (error) {
     console.error(error)
   }
@@ -135,6 +144,7 @@ async function hydrateCurrentTab() {
   state.pageContext = pageContext
   state.pageProof = pageProof
   state.captureStrategy = resolveCaptureStrategy(pageContext)
+  state.fullCaptureResult = null
 
   const transcript = pageContext?.transcript || pageContext?.selection || ""
   const providerName = pageContext?.provider?.name || "Generic page"
@@ -267,6 +277,226 @@ async function onSaveCapture(event) {
   setFeedback("Capture saved locally with proof.")
 }
 
+async function onRunFullCapture() {
+  if (!state.activeTab?.id) {
+    setFeedback("No active tab available for full capture.", true)
+    return
+  }
+
+  setStatus("Capturing", false)
+  setFeedback("Running full-thread capture...")
+
+  try {
+    const frameResults = await sendMessageToAllFrames(state.activeTab.id, { type: "spv:runFullCapture" })
+    const result = selectBestFullCaptureResult(frameResults)
+    state.fullCaptureResult = result || null
+
+    if (result?.status === "completed") {
+      const chunkCount = Array.isArray(result.chunks) ? result.chunks.length : 0
+      if (!els.internalNote.value && result.stitchedText) {
+        els.internalNote.value = result.stitchedText.slice(0, 1400)
+      }
+      els.pageSelection.textContent = result.stitchedText || els.pageSelection.textContent
+      renderAttachmentList(
+        els.detectedAttachments,
+        result.attachments || state.pageContext?.attachments || [],
+        "No visible attachments detected."
+      )
+      setStatus("Full thread", false)
+      setFeedback(`Full capture collected ${chunkCount} chunk${chunkCount === 1 ? "" : "s"}.`)
+      return
+    }
+
+    if (result?.status === "needs-ocr") {
+      const ocrResult = await runOcrFallback(result)
+      if (ocrResult?.status === "completed") {
+        state.fullCaptureResult = ocrResult
+        if (!els.internalNote.value && ocrResult.stitchedText) {
+          els.internalNote.value = ocrResult.stitchedText.slice(0, 1400)
+        }
+        els.pageSelection.textContent = ocrResult.stitchedText || els.pageSelection.textContent
+        renderAttachmentList(
+          els.detectedAttachments,
+          ocrResult.attachments || state.pageContext?.attachments || [],
+          "No visible attachments detected."
+        )
+        setStatus("OCR thread", false)
+        setFeedback("Locked chat captured with local OCR from the cropped proof.")
+        return
+      }
+
+      setStatus("OCR needed", true)
+      setFeedback(ocrResult?.reason || result.reason || "This widget needs OCR-based full capture.", true)
+      return
+    }
+
+    setStatus("Limited", true)
+    setFeedback(result?.reason || "Full capture is not available on this page yet.", true)
+  } catch (error) {
+    console.error(error)
+    setStatus("Failed", true)
+    setFeedback("Full capture failed on this page.", true)
+  }
+}
+
+async function sendMessageToAllFrames(tabId, message) {
+  let frames = [{ frameId: 0, url: state.activeTab?.url || "" }]
+
+  try {
+    const discoveredFrames = await chrome.webNavigation.getAllFrames({ tabId })
+    if (Array.isArray(discoveredFrames) && discoveredFrames.length) {
+      frames = discoveredFrames
+    }
+  } catch (error) {
+    console.warn("Frame discovery failed; falling back to the top frame.", error)
+  }
+
+  const responses = []
+
+  await Promise.all(
+    frames.map(async (frame) => {
+      try {
+        const response = await chrome.tabs.sendMessage(tabId, message, { frameId: frame.frameId })
+        if (response) {
+          responses.push({
+            ...response,
+            frameId: frame.frameId,
+            frameUrl: frame.url || response.url || ""
+          })
+        }
+      } catch {
+        // Some frames intentionally reject extension messages. That is normal on protected browser pages.
+      }
+    })
+  )
+
+  return responses
+}
+
+function scoreFrameContext(context) {
+  const transcriptLength = cleanGuess(context?.transcript).length
+  const selectionLength = cleanGuess(context?.selection).length
+  const providerScore = context?.provider?.score || 0
+  const surfaceScore = context?.supportSurface === "transcript" ? 40 : context?.supportSurface === "widget" ? 18 : 0
+  const attachmentScore = Array.isArray(context?.attachments) ? context.attachments.length * 5 : 0
+  return surfaceScore + providerScore * 3 + Math.min(transcriptLength / 40, 35) + Math.min(selectionLength / 80, 8) + attachmentScore
+}
+
+function mergeFrameContexts(contexts) {
+  if (!Array.isArray(contexts) || !contexts.length) {
+    return null
+  }
+
+  const topContext = contexts.find((context) => context.frameId === 0) || contexts[0]
+  const bestContext = [...contexts].sort((a, b) => scoreFrameContext(b) - scoreFrameContext(a))[0] || topContext
+  const topProvider = topContext?.provider?.score > bestContext?.provider?.score ? topContext.provider : bestContext.provider
+  const topProofTargetRect = topContext?.proofTargetRect || topContext?.transcriptRect || null
+  const safeProofTargetRect = bestContext.frameId === 0 ? bestContext.proofTargetRect || topProofTargetRect : topProofTargetRect
+
+  return {
+    ...bestContext,
+    provider: topProvider || bestContext.provider,
+    proofTargetRect: safeProofTargetRect || bestContext.proofTargetRect || null,
+    supportSurface:
+      bestContext.supportSurface === "transcript" || topContext.supportSurface !== "widget"
+        ? bestContext.supportSurface
+        : topContext.supportSurface,
+    frameCapture: {
+      selectedFrameId: bestContext.frameId,
+      selectedFrameUrl: bestContext.frameUrl || bestContext.url || "",
+      scannedFrameCount: contexts.length,
+      topFrameHadProofTarget: Boolean(topProofTargetRect)
+    }
+  }
+}
+
+function selectBestFullCaptureResult(results) {
+  if (!Array.isArray(results) || !results.length) {
+    return {
+      status: "unsupported",
+      reason: "No extension-readable frames responded.",
+      chunks: [],
+      attachments: []
+    }
+  }
+
+  const completed = results
+    .filter((result) => result.status === "completed")
+    .sort((a, b) => cleanGuess(b.stitchedText).length - cleanGuess(a.stitchedText).length)
+
+  if (completed.length) {
+    return {
+      ...completed[0],
+      frameCapture: {
+        selectedFrameId: completed[0].frameId,
+        selectedFrameUrl: completed[0].frameUrl || ""
+      }
+    }
+  }
+
+  const needsOcr = results.find((result) => result.status === "needs-ocr")
+  if (needsOcr) {
+    return needsOcr
+  }
+
+  return results[0]
+}
+
+async function runOcrFallback(captureResult) {
+  if (!state.pageProof?.dataUrl) {
+    return {
+      status: "needs-ocr",
+      reason: "OCR fallback needs a screenshot proof first."
+    }
+  }
+
+  setStatus("OCR running", false)
+  setFeedback("Reading the cropped chat proof locally with OCR. First run can take a little longer.")
+
+  const ocrResponse = await chrome.runtime.sendMessage({
+    type: "spv:ocrImage",
+    requestId: `ocr-${Date.now()}`,
+    imageDataUrl: state.pageProof.dataUrl
+  })
+
+  if (!ocrResponse?.ok) {
+    return {
+      status: "needs-ocr",
+      reason: ocrResponse?.error || "OCR did not return usable text."
+    }
+  }
+
+  const ocrText = cleanGuess(ocrResponse.text)
+  if (!ocrText) {
+    return {
+      status: "needs-ocr",
+      reason: "OCR ran, but no readable text was found in the cropped chat proof."
+    }
+  }
+
+  const attachmentHints = extractAttachmentHintsFromText(ocrText, state.pageProof)
+
+  return {
+    status: "completed",
+    reason: captureResult?.reason || "OCR fallback completed from cropped chat proof.",
+    chunks: [
+      {
+        index: 0,
+        sourceType: "ocr-screenshot",
+        text: ocrText,
+        rect: state.pageContext?.proofTargetRect || null,
+        screenshotRef: state.pageProof.filename,
+        confidence: Math.max(0.35, Math.min(0.92, ocrResponse.confidence || 0.55))
+      }
+    ],
+    stitchedText: ocrText,
+    ocrText,
+    attachments: [...(state.pageContext?.attachments || []), ...attachmentHints],
+    proofTargetRect: state.pageContext?.proofTargetRect || null,
+    strategy: "frame-ocr"
+  }
+}
+
 function buildCapture() {
   const providerAdapter = globalThis.SPV.detectProviderAdapter(state.pageContext)
   const strategy = state.captureStrategy || globalThis.SPV.planFullThreadCapture(state.pageContext, providerAdapter)
@@ -274,6 +504,7 @@ function buildCapture() {
   return globalThis.SPV.createCaptureSession({
     pageContext: state.pageContext,
     pageProof: state.pageProof,
+    fullCaptureResult: state.fullCaptureResult,
     providerAdapter,
     strategy,
     formValues: {
@@ -456,18 +687,45 @@ function renderAttachmentList(container, attachments, emptyMessage) {
     row.className = "attachment-item"
     const label = escapeHtml(attachment.label || "Attachment")
     const kind = escapeHtml(attachment.kind || "file")
-    const url = escapeHtml(attachment.url || "#")
+    const url = escapeHtml(attachment.url || "")
+    const canOpenUrl = Boolean(attachment.url)
 
     row.innerHTML = `
       <div class="attachment-copy">
         <strong>${label}</strong>
-        <span>${kind}</span>
+        <span>${kind}${attachment.source ? ` · ${escapeHtml(attachment.source)}` : ""}</span>
       </div>
-      <a class="attachment-link" href="${url}" target="_blank" rel="noreferrer">Open</a>
+      ${
+        canOpenUrl
+          ? `<a class="attachment-link" href="${url}" target="_blank" rel="noreferrer">Open</a>`
+          : `<span class="attachment-link muted-link" title="Only visible in the saved proof screenshot">Proof only</span>`
+      }
     `
 
     container.appendChild(row)
   })
+}
+
+function extractAttachmentHintsFromText(text, proof) {
+  const lines = text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+  const attachmentPattern =
+    /\b(attached|attachment|uploaded|download|file|image|screenshot|pdf|png|jpe?g|docx?|xlsx?|receipt|invoice)\b/i
+  const filePattern = /\b[\w .-]+\.(?:pdf|png|jpe?g|gif|webp|docx?|xlsx?|zip|csv)\b/i
+
+  return lines
+    .filter((line) => attachmentPattern.test(line) || filePattern.test(line))
+    .slice(0, 4)
+    .map((line, index) => ({
+      kind: filePattern.test(line) ? "file-evidence" : "attachment-evidence",
+      label: line.slice(0, 90),
+      url: "",
+      source: "ocr",
+      proofRef: proof?.filename || "",
+      confidence: 0.38 + index * 0.02
+    }))
 }
 
 function loadImage(dataUrl) {

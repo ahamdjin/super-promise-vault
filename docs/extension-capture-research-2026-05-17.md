@@ -170,6 +170,40 @@ Persist:
 - attachments
 - capture confidence
 
+## Implementation status
+
+### Done in the extension
+
+- bundled `tesseract.js`, the browser worker, `tesseract.js-core`, and `eng.traineddata.gz` locally
+- added an MV3 background service worker
+- added an offscreen OCR document so OCR can run without depending on CDN scripts
+- added frame-wide scanning with `chrome.webNavigation.getAllFrames()`
+- added full-thread DOM capture across responding frames
+- added cropped-proof OCR fallback when a widget frame is visible but DOM capture is blocked
+- stores OCR text as transcript chunks, not just a loose note
+- stores OCR-visible attachment mentions as low-confidence proof-linked evidence
+
+### Current local verification
+
+- extension JavaScript syntax checks pass
+- manifest parses and all declared extension files exist
+- Chrome can pack the extension successfully
+- Tesseract can OCR generated support-chat text using the bundled English model
+- temporary Chromium live-smoke test loads the unpacked extension against `https://www.tawk.to/`
+- frame-wide capture found 6 frames on `tawk.to`
+- one child `about:blank` frame exposed readable transcript text
+- full-thread capture completed from that readable child frame
+- offscreen OCR completed through the real extension service worker/offscreen document path
+- Next/Vercel production build passes
+
+### Still needs live browser verification
+
+- reload the unpacked extension in `chrome://extensions`
+- re-test in the user’s actual Chrome profile on `https://www.tawk.to/`
+- confirm popup UX chooses the readable child-frame transcript over the top-frame OCR fallback
+- if the user’s Chrome profile behaves differently, confirm cropped OCR result from the popup
+- save a capture and export JSON to inspect the stored transcript/proof shape
+
 ## Immediate engineering plan
 
 ### Phase 1
@@ -212,13 +246,13 @@ This project should run on this loop:
 
 ## Current conclusion
 
-The extension now has a valid direction, but it is not production ready yet.
+The extension now has a valid layered capture direction and a first working OCR foundation, but it is not production ready yet.
 
-The next non-negotiable capability is:
+The next non-negotiable capability is live verification against real widgets after reloading the unpacked extension:
 
-- cropped chat-region OCR
-
-Without OCR, locked iframe widgets will always leave us with only partial capture quality.
+- if DOM capture works inside the widget frame, improve stitching/deduplication
+- if OCR is the path, add guided multi-pass OCR with scroll prompts or provider-specific frame controls
+- after reliable local saves, add app/Supabase sync
 
 ## Sources
 
