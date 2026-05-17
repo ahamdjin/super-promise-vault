@@ -18,13 +18,31 @@ function corsHeaders(request: NextRequest) {
 }
 
 function json(request: NextRequest, body: unknown, init?: ResponseInit) {
+  const headers = new Headers(init?.headers);
+  for (const [key, value] of Object.entries(corsHeaders(request))) {
+    headers.set(key, value);
+  }
+
   return NextResponse.json(body, {
     ...init,
-    headers: {
-      ...corsHeaders(request),
-      ...(init?.headers || {})
-    }
+    headers
   });
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+}
+
+function getString(value: unknown) {
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function hasReadableTranscript(value: unknown) {
+  const transcript = getString(value);
+  if (transcript) return true;
+
+  const transcriptRecord = asRecord(value);
+  return Boolean(getString(transcriptRecord?.stitchedText));
 }
 
 export async function OPTIONS(request: NextRequest) {
@@ -77,27 +95,38 @@ export async function POST(request: NextRequest) {
     return json(request, { error: 'Sign in to Support Promise Vault before syncing extension captures.' }, { status: 401 });
   }
 
-  let capture: any;
+  let capture: Record<string, unknown>;
   try {
-    capture = await request.json();
+    const parsed = await request.json();
+    const parsedCapture = asRecord(parsed);
+    if (!parsedCapture) {
+      return json(request, { error: 'Capture payload must be a JSON object.' }, { status: 400 });
+    }
+
+    capture = parsedCapture;
   } catch {
     return json(request, { error: 'Invalid capture JSON.' }, { status: 400 });
   }
 
-  if (!capture?.id || !capture?.transcript) {
+  const captureId = getString(capture.id);
+  if (!captureId || !hasReadableTranscript(capture.transcript)) {
     return json(request, { error: 'Capture must include an id and transcript.' }, { status: 422 });
   }
 
+  const context = asRecord(capture.context);
+  const extraction = asRecord(capture.extraction);
+  const provider = asRecord(capture.provider);
+
   const row = {
     user_id: user.id,
-    extension_capture_id: capture.id,
-    company: capture.company || capture.context?.company || null,
-    issue_title: capture.issueTitle || capture.context?.issueTitle || null,
-    promised_outcome: capture.promisedOutcome || capture.extraction?.promisedOutcome || null,
-    provider_name: capture.providerName || capture.provider?.name || null,
-    source_url: capture.pageUrl || capture.context?.pageUrl || null,
-    follow_up_at: capture.followUpAt || capture.context?.followUpAt || null,
-    amount_label: capture.amount || capture.context?.amount || null,
+    extension_capture_id: captureId,
+    company: getString(capture.company) || getString(context?.company),
+    issue_title: getString(capture.issueTitle) || getString(context?.issueTitle),
+    promised_outcome: getString(capture.promisedOutcome) || getString(extraction?.promisedOutcome),
+    provider_name: getString(capture.providerName) || getString(provider?.name),
+    source_url: getString(capture.pageUrl) || getString(context?.pageUrl),
+    follow_up_at: getString(capture.followUpAt) || getString(context?.followUpAt),
+    amount_label: getString(capture.amount) || getString(context?.amount),
     capture
   };
 

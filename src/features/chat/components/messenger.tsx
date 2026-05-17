@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { useChatStore } from '../utils/store';
 import type { Attachment } from '../utils/types';
 import { fetchExtensionCaptureConversations } from '../utils/imports';

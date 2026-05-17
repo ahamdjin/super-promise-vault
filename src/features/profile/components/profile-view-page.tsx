@@ -24,7 +24,7 @@ export default async function ProfileViewPage() {
   const providers = Array.from(
     new Set(
       [
-        ...(Array.isArray(user?.app_metadata?.providers) ? user?.app_metadata?.providers : []),
+        ...(Array.isArray(user?.app_metadata?.providers) ? user.app_metadata.providers : []),
         ...(Array.isArray(user?.identities)
           ? user.identities
               .map((identity) =>

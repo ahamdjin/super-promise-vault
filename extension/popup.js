@@ -399,7 +399,11 @@ function mergeFrameContexts(contexts) {
   }
 
   const topContext = contexts.find((context) => context.frameId === 0) || contexts[0]
-  const bestContext = [...contexts].sort((a, b) => scoreFrameContext(b) - scoreFrameContext(a))[0] || topContext
+  const bestContext =
+    contexts.reduce(
+      (best, context) => (scoreFrameContext(context) > scoreFrameContext(best) ? context : best),
+      topContext
+    ) || topContext
   const topProvider = topContext?.provider?.score > bestContext?.provider?.score ? topContext.provider : bestContext.provider
   const topProofTargetRect = topContext?.proofTargetRect || topContext?.transcriptRect || null
   const safeProofTargetRect = bestContext.frameId === 0 ? bestContext.proofTargetRect || topProofTargetRect : topProofTargetRect
@@ -431,16 +435,18 @@ function selectBestFullCaptureResult(results) {
     }
   }
 
-  const completed = results
-    .filter((result) => result.status === "completed")
-    .sort((a, b) => cleanGuess(b.stitchedText).length - cleanGuess(a.stitchedText).length)
+  const completed = results.filter((result) => result.status === "completed")
+  const bestCompleted = completed.reduce(
+    (best, result) => (cleanGuess(result.stitchedText).length > cleanGuess(best.stitchedText).length ? result : best),
+    completed[0]
+  )
 
   if (completed.length) {
     return {
-      ...completed[0],
+      ...bestCompleted,
       frameCapture: {
-        selectedFrameId: completed[0].frameId,
-        selectedFrameUrl: completed[0].frameUrl || ""
+        selectedFrameId: bestCompleted.frameId,
+        selectedFrameUrl: bestCompleted.frameUrl || ""
       }
     }
   }
@@ -782,8 +788,8 @@ function extractAttachmentHintsFromText(text, proof) {
 function loadImage(dataUrl) {
   return new Promise((resolve, reject) => {
     const image = new Image()
-    image.onload = () => resolve(image)
-    image.onerror = reject
+    image.addEventListener("load", () => resolve(image), { once: true })
+    image.addEventListener("error", reject, { once: true })
     image.src = dataUrl
   })
 }

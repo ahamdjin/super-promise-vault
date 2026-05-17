@@ -10,8 +10,68 @@ type ExtensionCaptureRow = {
   source_url: string | null;
   follow_up_at: string | null;
   amount_label: string | null;
-  capture: any;
+  capture: ExtensionCapture;
   created_at: string;
+};
+
+type ExtensionProvider = {
+  name?: string;
+};
+
+type ExtensionCaptureContext = {
+  amount?: string;
+  company?: string;
+  followUpAt?: string;
+  issueTitle?: string;
+  pageUrl?: string;
+};
+
+type ExtensionCaptureExtraction = {
+  promisedOutcome?: string;
+};
+
+type ExtensionCaptureTranscript = {
+  stitchedText?: string;
+};
+
+type ExtensionCaptureProof = {
+  dataUrl?: string;
+  filename?: string;
+  mimeType?: string;
+};
+
+type ExtensionCaptureAttachment = {
+  id?: string;
+  kind?: string;
+  label?: string;
+  name?: string;
+  source?: string;
+  type?: string;
+  url?: string;
+};
+
+type ExtensionCaptureAssets = {
+  attachments?: ExtensionCaptureAttachment[];
+};
+
+type ExtensionCapture = {
+  amount?: string;
+  assets?: ExtensionCaptureAssets;
+  attachments?: ExtensionCaptureAttachment[];
+  caseId?: string;
+  company?: string;
+  context?: ExtensionCaptureContext;
+  extraction?: ExtensionCaptureExtraction;
+  followUpAt?: string;
+  id?: string;
+  internalNote?: string;
+  issueTitle?: string;
+  pageUrl?: string;
+  promisedOutcome?: string;
+  proof?: ExtensionCaptureProof;
+  provider?: ExtensionProvider;
+  providerName?: string;
+  transcript?: string | ExtensionCaptureTranscript;
 };
 
 export async function fetchExtensionCaptureConversations(): Promise<Conversation[]> {
@@ -30,7 +90,7 @@ export async function fetchExtensionCaptureConversations(): Promise<Conversation
 
 function extensionCaptureRowToConversation(row: ExtensionCaptureRow): Conversation {
   const capture = row.capture || {};
-  const transcript = String(capture.transcript || capture.transcript?.stitchedText || capture.internalNote || '').trim();
+  const transcript = getCaptureTranscript(capture);
   const messages = transcriptToMessages(transcript, row.created_at, row.company || capture.company || 'Support');
   const attachments = normalizeAttachments(capture.attachments || capture.assets?.attachments || [], capture.proof);
   const company = row.company || capture.company || 'Support case';
@@ -83,14 +143,26 @@ function transcriptToMessages(transcript: string, createdAt: string, company: st
     .slice(0, 80)
     .map((line, index) => ({
       id: `imported-${createdAt}-${index}`,
-      sender: /^(you|me|customer|user)\b[:\-]/i.test(line) ? 'user' : 'contact',
-      author: /^(you|me|customer|user)\b[:\-]/i.test(line) ? 'You' : company,
-      text: line.replace(/^(you|me|customer|user|support|agent)\b[:\-]\s*/i, ''),
+      sender: /^(you|me|customer|user)\b[:-]/i.test(line) ? 'user' : 'contact',
+      author: /^(you|me|customer|user)\b[:-]/i.test(line) ? 'You' : company,
+      text: line.replace(/^(you|me|customer|user|support|agent)\b[:-]\s*/i, ''),
       timestamp: index === 0 ? 'Imported' : ''
     }));
 }
 
-function normalizeAttachments(attachments: any[], proof: any): Attachment[] {
+function getCaptureTranscript(capture: ExtensionCapture) {
+  if (typeof capture.transcript === 'string') {
+    return capture.transcript.trim();
+  }
+
+  if (typeof capture.transcript?.stitchedText === 'string') {
+    return capture.transcript.stitchedText.trim();
+  }
+
+  return (capture.internalNote || '').trim();
+}
+
+function normalizeAttachments(attachments: ExtensionCaptureAttachment[], proof?: ExtensionCaptureProof): Attachment[] {
   const normalized = attachments.map((attachment, index) => ({
     id: attachment.id || `imported-attachment-${index}`,
     name: attachment.label || attachment.name || `Attachment ${index + 1}`,
