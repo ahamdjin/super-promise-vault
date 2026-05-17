@@ -179,6 +179,48 @@ body {
   flex: 1;
 }
 
+.attachment-list {
+  display: grid;
+  gap: 8px;
+}
+
+.attachment-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--background);
+}
+
+.attachment-copy {
+  min-width: 0;
+}
+
+.attachment-copy strong {
+  display: block;
+  font-size: 12px;
+}
+
+.attachment-copy span {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--muted-foreground);
+  word-break: break-word;
+}
+
+.attachment-link {
+  font-size: 11px;
+  padding: 7px 10px;
+  background: var(--accent);
+  border-radius: 999px;
+  color: var(--accent-foreground);
+  text-decoration: none;
+}
+
 .field-grid {
   grid-template-columns: 1fr 1fr;
 }

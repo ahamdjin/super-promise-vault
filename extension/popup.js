@@ -20,6 +20,7 @@ const els = {
   detectedCaseId: document.getElementById("detected-case-id"),
   detectedAmount: document.getElementById("detected-amount"),
   detectedPromise: document.getElementById("detected-promise"),
+  detectedAttachments: document.getElementById("detected-attachments"),
   proofPanel: document.getElementById("proof-panel"),
   proofImage: document.getElementById("proof-image"),
   viewCurrentProof: document.getElementById("view-current-proof"),
@@ -45,6 +46,7 @@ const els = {
   previewFollowup: document.getElementById("preview-followup"),
   previewImage: document.getElementById("preview-image"),
   previewTranscript: document.getElementById("preview-transcript"),
+  previewAttachments: document.getElementById("preview-attachments"),
   previewOpenProof: document.getElementById("preview-open-proof"),
   previewDownloadProof: document.getElementById("preview-download-proof"),
   previewOpenPage: document.getElementById("preview-open-page")
@@ -124,7 +126,7 @@ async function hydrateCurrentTab() {
 
   let pageProof = null
   try {
-    pageProof = await captureVisibleProof(tab)
+    pageProof = await captureVisibleProof(tab, pageContext?.proofTargetRect || null)
   } catch (error) {
     console.error(error)
   }
@@ -150,6 +152,7 @@ async function hydrateCurrentTab() {
   els.detectedCaseId.textContent = caseIdGuess || "-"
   els.detectedAmount.textContent = amountGuess || "-"
   els.detectedPromise.textContent = promiseGuess || "-"
+  renderAttachmentList(els.detectedAttachments, pageContext?.attachments || [], "No visible attachments detected.")
 
   if (!els.company.value) {
     els.company.value = companyGuess
@@ -174,7 +177,7 @@ async function hydrateCurrentTab() {
   setStatus(transcript ? "Transcript" : pageProof ? "Proof ready" : "Ready", false)
 }
 
-async function captureVisibleProof(tab) {
+async function captureVisibleProof(tab, targetRect) {
   if (!tab?.windowId) {
     return null
   }
@@ -192,13 +195,47 @@ async function captureVisibleProof(tab) {
     titleize(state.pageContext?.companyGuess || safeHost(tab.url || "").split(".")[0] || "support-proof")
   )
 
+  const croppedDataUrl = await cropProofToRect(dataUrl, tab, targetRect)
+
   return {
     type: "screenshot",
     mimeType: "image/jpeg",
-    dataUrl,
+    dataUrl: croppedDataUrl || dataUrl,
     filename: `${filenameStem || "support-proof"}-${Date.now()}.jpg`,
     capturedAt: new Date().toISOString()
   }
+}
+
+async function cropProofToRect(dataUrl, tab, rect) {
+  if (!rect || !tab?.width || !tab?.height) {
+    return dataUrl
+  }
+
+  const image = await loadImage(dataUrl)
+  const scaleX = image.width / tab.width
+  const scaleY = image.height / tab.height
+  const sourceX = Math.max(0, Math.floor(rect.x * scaleX))
+  const sourceY = Math.max(0, Math.floor(rect.y * scaleY))
+  const sourceWidth = Math.max(1, Math.floor(rect.width * scaleX))
+  const sourceHeight = Math.max(1, Math.floor(rect.height * scaleY))
+  const cropWidth = Math.min(sourceWidth, image.width - sourceX)
+  const cropHeight = Math.min(sourceHeight, image.height - sourceY)
+
+  if (cropWidth <= 0 || cropHeight <= 0) {
+    return dataUrl
+  }
+
+  const canvas = document.createElement("canvas")
+  canvas.width = cropWidth
+  canvas.height = cropHeight
+  const context = canvas.getContext("2d")
+
+  if (!context) {
+    return dataUrl
+  }
+
+  context.drawImage(image, sourceX, sourceY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight)
+  return canvas.toDataURL("image/jpeg", 0.86)
 }
 
 function renderCurrentProof() {
@@ -243,6 +280,7 @@ function buildCapture() {
     internalNote: els.internalNote.value.trim(),
     selectedText: state.pageContext?.selection || "",
     transcript: state.pageContext?.transcript || "",
+    attachments: state.pageContext?.attachments || [],
     pageTitle: state.activeTab?.title || "",
     pageUrl: state.activeTab?.url || "",
     proof: state.pageProof,
@@ -380,6 +418,7 @@ function openCapturePreview(capture) {
   els.previewFollowup.textContent = formatDate(capture.followUpAt)
   els.previewTranscript.textContent =
     capture.transcript || capture.selectedText || capture.internalNote || "No transcript saved."
+  renderAttachmentList(els.previewAttachments, capture.attachments || [], "No attachments saved.")
 
   if (capture.proof?.dataUrl) {
     els.previewImage.src = capture.proof.dataUrl
@@ -397,6 +436,45 @@ async function getCaptures() {
 
 function openProof(proof) {
   chrome.tabs.create({ url: proof.dataUrl })
+}
+
+function renderAttachmentList(container, attachments, emptyMessage) {
+  container.innerHTML = ""
+
+  if (!attachments.length) {
+    const empty = document.createElement("p")
+    empty.className = "empty-state"
+    empty.textContent = emptyMessage
+    container.appendChild(empty)
+    return
+  }
+
+  attachments.forEach((attachment) => {
+    const row = document.createElement("div")
+    row.className = "attachment-item"
+    const label = escapeHtml(attachment.label || "Attachment")
+    const kind = escapeHtml(attachment.kind || "file")
+    const url = escapeHtml(attachment.url || "#")
+
+    row.innerHTML = `
+      <div class="attachment-copy">
+        <strong>${label}</strong>
+        <span>${kind}</span>
+      </div>
+      <a class="attachment-link" href="${url}" target="_blank" rel="noreferrer">Open</a>
+    `
+
+    container.appendChild(row)
+  })
+}
+
+function loadImage(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const image = new Image()
+    image.onload = () => resolve(image)
+    image.onerror = reject
+    image.src = dataUrl
+  })
 }
 
 function downloadProof(proof, filenameStem = "support-proof") {

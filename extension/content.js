@@ -84,6 +84,24 @@ function scoreElement(element) {
   return signal + Math.min(text.length / 120, 10)
 }
 
+function getElementRect(element) {
+  if (!(element instanceof HTMLElement)) {
+    return null
+  }
+
+  const rect = element.getBoundingClientRect()
+  if (!rect.width || !rect.height) {
+    return null
+  }
+
+  return {
+    x: Math.max(0, rect.left),
+    y: Math.max(0, rect.top),
+    width: rect.width,
+    height: rect.height
+  }
+}
+
 function findBestTranscriptElement() {
   const selectors = [
     '[role="log"]',
@@ -123,6 +141,31 @@ function findBestTranscriptElement() {
   })
 
   return best
+}
+
+function findBestProviderFrame() {
+  const frames = Array.from(document.querySelectorAll("iframe"))
+    .filter((frame) => isVisible(frame))
+    .map((frame) => {
+      const idAndClass = `${frame.id} ${frame.className} ${frame.name || ""} ${frame.src || ""}`.toLowerCase()
+      let score = 0
+      if (/intercom|zendesk|zopim|helpscout|beacon|gorgias/.test(idAndClass)) {
+        score += 10
+      }
+      if (/chat|support|message|conversation|widget/.test(idAndClass)) {
+        score += 6
+      }
+
+      const rect = frame.getBoundingClientRect()
+      if (rect.width > 260 && rect.height > 220) {
+        score += 4
+      }
+
+      return { frame, score }
+    })
+
+  frames.sort((a, b) => b.score - a.score)
+  return frames[0]?.score > 0 ? frames[0].frame : null
 }
 
 function extractTranscript(element) {
@@ -165,6 +208,57 @@ function extractTranscript(element) {
   }
 
   return lines.slice(0, 24).join("\n")
+}
+
+function extractAttachments(element) {
+  if (!element) {
+    return []
+  }
+
+  const items = []
+  const seen = new Set()
+
+  element.querySelectorAll("img, a[href], [data-attachment], [class*='attachment']").forEach((node) => {
+    if (!(node instanceof HTMLElement) || !isVisible(node)) {
+      return
+    }
+
+    if (node instanceof HTMLImageElement) {
+      const url = node.currentSrc || node.src
+      if (!url || seen.has(url)) {
+        return
+      }
+
+      seen.add(url)
+      items.push({
+        kind: "image",
+        label: normalizeText(node.alt || node.getAttribute("aria-label") || "Image attachment"),
+        url
+      })
+      return
+    }
+
+    if (node instanceof HTMLAnchorElement) {
+      const url = node.href
+      if (!url || seen.has(url)) {
+        return
+      }
+
+      const label = normalizeText(node.innerText || node.getAttribute("aria-label") || node.download || "")
+      if (!label && !/\.(png|jpe?g|gif|webp|pdf|docx?|xlsx?|zip)$/i.test(url)) {
+        return
+      }
+
+      seen.add(url)
+      items.push({
+        kind: /\.(png|jpe?g|gif|webp|svg)$/i.test(url) ? "image-link" : "file",
+        label: label || url.split("/").pop() || "Attachment",
+        url
+      })
+    }
+  })
+
+  return items.slice(0, 8)
 }
 
 function findRegexMatch(pattern, value) {
@@ -246,19 +340,27 @@ function getIssueTitleGuess() {
 function getPageContext() {
   const selection = window.getSelection ? normalizeText(window.getSelection().toString()) : ""
   const transcriptElement = findBestTranscriptElement()
+  const providerFrame = findBestProviderFrame()
   const transcript = extractTranscript(transcriptElement)
+  const transcriptRect = getElementRect(transcriptElement)
+  const frameRect = getElementRect(providerFrame)
   const bodyText = normalizeText(document.body?.innerText || "")
   const fullText = [selection, transcript, bodyText].filter(Boolean).join("\n")
   const provider = detectProvider()
   const supportSignals = countSupportSignals(fullText)
   const supportSurface =
     transcript.length > 40 ? "transcript" : provider.score >= 4 || supportSignals >= 5 ? "widget" : "weak"
+  const proofTargetRect = transcriptRect || frameRect || null
+  const attachments = extractAttachments(transcriptElement || providerFrame)
 
   return {
     title: document.title || "",
     url: window.location.href,
     selection,
     transcript,
+    transcriptRect,
+    proofTargetRect,
+    attachments,
     provider,
     supportSurface,
     issueTitleGuess: getIssueTitleGuess(),
