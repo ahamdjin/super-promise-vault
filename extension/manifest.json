@@ -2,8 +2,16 @@
   "manifest_version": 3,
   "name": "Support Promise Vault Capture",
   "version": "0.1.0",
-  "description": "Capture support promises from the current tab into a simple local case queue.",
-  "permissions": ["activeTab", "storage", "tabs", "scripting"],
+  "description": "Automatically detect support conversations and capture promises from the current page.",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["<all_urls>"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
   "action": {
     "default_title": "Support Promise Vault",
     "default_popup": "popup.html"

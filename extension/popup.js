@@ -3,7 +3,7 @@ const MAX_CAPTURES = 25;
 
 const state = {
   activeTab: null,
-  selectedText: "",
+  pageContext: null,
   lastSavedCapture: null
 };
 
@@ -12,6 +12,10 @@ const els = {
   pageTitle: document.getElementById("page-title"),
   pageUrl: document.getElementById("page-url"),
   pageSelection: document.getElementById("page-selection"),
+  detectedCompany: document.getElementById("detected-company"),
+  detectedCaseId: document.getElementById("detected-case-id"),
+  detectedAmount: document.getElementById("detected-amount"),
+  detectedPromise: document.getElementById("detected-promise"),
   company: document.getElementById("company"),
   caseId: document.getElementById("case-id"),
   issueTitle: document.getElementById("issue-title"),
@@ -42,14 +46,14 @@ function bindEvents() {
   els.form.addEventListener("submit", onSaveCapture);
   els.refreshButton.addEventListener("click", async () => {
     await hydrateCurrentTab();
-    setFeedback("Current page refreshed.");
+    setFeedback("Auto-capture refreshed.");
   });
   els.exportButton.addEventListener("click", onExportLastCapture);
   els.clearButton.addEventListener("click", onClearCaptures);
 }
 
 async function hydrateCurrentTab() {
-  setStatus("Loading", false);
+  setStatus("Scanning", false);
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   state.activeTab = tab || null;
@@ -62,40 +66,49 @@ async function hydrateCurrentTab() {
   els.pageTitle.textContent = tab.title || "-";
   els.pageUrl.textContent = tab.url || "-";
 
-  const urlHost = safeHost(tab.url || "");
-  if (urlHost && !els.company.value) {
-    els.company.value = titleize(urlHost.replace(/^www\./, "").split(".")[0]);
-  }
-
+  let pageContext = null;
   try {
-    const [{ result }] = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: () => ({
-        selection: window.getSelection ? window.getSelection().toString().trim() : "",
-        title: document.title || "",
-        url: window.location.href
-      })
-    });
-
-    state.selectedText = result?.selection || "";
-    els.pageSelection.textContent = state.selectedText || "No selected text found yet.";
-
-    if (!els.issueTitle.value) {
-      els.issueTitle.value = result?.title || tab.title || "";
-    }
-
-    if (!els.promisedOutcome.value && state.selectedText) {
-      els.promisedOutcome.value = state.selectedText;
-    }
-
-    setStatus("Ready", false);
+    pageContext = await chrome.tabs.sendMessage(tab.id, { type: "spv:getPageContext" });
   } catch (error) {
     console.error(error);
-    state.selectedText = "";
-    els.pageSelection.textContent =
-      "Could not read selected text on this page. You can still save the case manually.";
-    setStatus("Limited", false);
   }
+
+  state.pageContext = pageContext;
+
+  const transcript = pageContext?.transcript || pageContext?.selection || "";
+  els.pageSelection.textContent =
+    transcript || "No support transcript detected yet. Try the extension on an actual help or chat page.";
+
+  const companyGuess = titleize(pageContext?.companyGuess || safeHost(tab.url || "").split(".")[0] || "");
+  const caseIdGuess = cleanGuess(pageContext?.caseId);
+  const amountGuess = cleanGuess(pageContext?.amount);
+  const promiseGuess = cleanGuess(pageContext?.promisedOutcome);
+
+  els.detectedCompany.textContent = companyGuess || "-";
+  els.detectedCaseId.textContent = caseIdGuess || "-";
+  els.detectedAmount.textContent = amountGuess || "-";
+  els.detectedPromise.textContent = promiseGuess || "-";
+
+  if (!els.company.value) {
+    els.company.value = companyGuess;
+  }
+  if (!els.issueTitle.value) {
+    els.issueTitle.value = pageContext?.title || tab.title || "";
+  }
+  if (!els.caseId.value && caseIdGuess) {
+    els.caseId.value = caseIdGuess;
+  }
+  if (!els.amount.value && amountGuess) {
+    els.amount.value = amountGuess;
+  }
+  if (!els.promisedOutcome.value && promiseGuess) {
+    els.promisedOutcome.value = promiseGuess;
+  }
+  if (!els.internalNote.value && transcript) {
+    els.internalNote.value = transcript.slice(0, 800);
+  }
+
+  setStatus(transcript ? "Detected" : "Ready", false);
 }
 
 async function onSaveCapture(event) {
@@ -123,7 +136,8 @@ function buildCapture() {
     amount: els.amount.value.trim(),
     followUpAt: els.followUpAt.value,
     internalNote: els.internalNote.value.trim(),
-    selectedText: state.selectedText,
+    selectedText: state.pageContext?.selection || "",
+    transcript: state.pageContext?.transcript || "",
     pageTitle: state.activeTab?.title || "",
     pageUrl: state.activeTab?.url || "",
     createdAt
@@ -241,7 +255,7 @@ function setStatus(text, isError) {
 
 function setFeedback(message, isError = false) {
   els.feedback.textContent = message;
-  els.feedback.style.color = isError ? "#b91c1c" : "#475569";
+  els.feedback.style.color = isError ? "#b91c1c" : "#6b7280";
 }
 
 function safeHost(value) {
@@ -287,4 +301,8 @@ function formatDate(value) {
     month: "short",
     day: "numeric"
   });
+}
+
+function cleanGuess(value) {
+  return typeof value === "string" ? value.trim() : "";
 }

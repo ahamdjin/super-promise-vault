@@ -31,8 +31,33 @@
             <p id="page-url">-</p>
           </div>
           <div>
-            <label>Selection</label>
-            <p id="page-selection" class="multiline">No selected text found yet.</p>
+            <label>Detected transcript</label>
+            <p id="page-selection" class="multiline">No support transcript detected yet.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-heading">
+          <h2>Detected fields</h2>
+          <span class="status-pill muted">Auto</span>
+        </div>
+        <div class="meta-list">
+          <div>
+            <label>Company guess</label>
+            <p id="detected-company">-</p>
+          </div>
+          <div>
+            <label>Case ID guess</label>
+            <p id="detected-case-id">-</p>
+          </div>
+          <div>
+            <label>Amount guess</label>
+            <p id="detected-amount">-</p>
+          </div>
+          <div>
+            <label>Promised outcome guess</label>
+            <p id="detected-promise" class="multiline">-</p>
           </div>
         </div>
       </section>
@@ -40,7 +65,7 @@
       <form id="capture-form" class="panel form-panel">
         <div class="panel-heading">
           <h2>Case details</h2>
-          <span class="status-pill muted">Local only</span>
+          <span class="status-pill muted">Auto-filled</span>
         </div>
 
         <div class="field-grid">
