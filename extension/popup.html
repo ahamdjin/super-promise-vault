@@ -22,6 +22,16 @@
           <span id="page-status" class="status-pill">Loading</span>
         </div>
         <div class="meta-list">
+          <div class="meta-grid">
+            <div>
+              <label>Provider</label>
+              <p id="detected-provider">-</p>
+            </div>
+            <div>
+              <label>Surface</label>
+              <p id="detected-surface">-</p>
+            </div>
+          </div>
           <div>
             <label>Title</label>
             <p id="page-title">-</p>
@@ -33,6 +43,15 @@
           <div>
             <label>Detected transcript</label>
             <p id="page-selection" class="multiline">No support transcript detected yet.</p>
+          </div>
+        </div>
+        <div id="proof-panel" class="proof-panel is-hidden">
+          <div class="proof-preview-frame">
+            <img id="proof-image" alt="Captured support proof preview" />
+          </div>
+          <div class="proof-actions">
+            <button id="view-current-proof" class="secondary-button" type="button">View proof</button>
+            <button id="download-current-proof" class="ghost-button" type="button">Download proof</button>
           </div>
         </div>
       </section>
@@ -139,6 +158,32 @@
           <p class="empty-state">No captures saved yet.</p>
         </div>
       </section>
+
+      <dialog id="capture-preview-dialog" class="preview-dialog">
+        <div class="preview-dialog-head">
+          <div>
+            <p id="preview-company" class="capture-title">Preview</p>
+            <p id="preview-issue" class="capture-subtitle">-</p>
+          </div>
+          <button id="close-preview" class="ghost-button" type="button">Close</button>
+        </div>
+        <div class="preview-meta">
+          <p><strong>Promise:</strong> <span id="preview-promise">-</span></p>
+          <p><strong>Follow-up:</strong> <span id="preview-followup">-</span></p>
+        </div>
+        <div class="proof-preview-frame dialog-proof-frame">
+          <img id="preview-image" alt="Saved proof preview" />
+        </div>
+        <div class="proof-actions">
+          <button id="preview-open-proof" class="secondary-button" type="button">Open proof</button>
+          <button id="preview-download-proof" class="ghost-button" type="button">Download proof</button>
+          <button id="preview-open-page" class="ghost-button" type="button">Open page</button>
+        </div>
+        <div class="preview-transcript">
+          <label>Transcript</label>
+          <p id="preview-transcript" class="multiline">-</p>
+        </div>
+      </dialog>
 
       <p id="feedback" class="feedback" aria-live="polite"></p>
     </main>
