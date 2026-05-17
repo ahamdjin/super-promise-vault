@@ -16,6 +16,7 @@
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
     "extension:smoke": "node scripts/extension-live-smoke.mjs",
+    "extension:providers": "node scripts/extension-provider-fixture-smoke.mjs",
     "prepare": "husky"
   },
   "dependencies": {

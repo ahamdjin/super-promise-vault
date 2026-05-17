@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { useChatStore } from '../utils/store';
 import type { Attachment } from '../utils/types';
+import { fetchExtensionCaptureConversations } from '../utils/imports';
 import { ConversationList } from './conversation-list';
 import { ConversationSelect } from './conversation-select';
 import { ChatArea } from './chat-area';
@@ -15,6 +16,7 @@ export function Messenger() {
     selectConversation,
     setDraft,
     sendMessage,
+    upsertImportedConversations,
     getActiveConversation
   } = useChatStore();
 
@@ -25,6 +27,24 @@ export function Messenger() {
     setAttachments([]);
     setComposeMode('user');
   }, [selectedConversationId]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    fetchExtensionCaptureConversations()
+      .then((importedConversations) => {
+        if (isActive && importedConversations.length) {
+          upsertImportedConversations(importedConversations);
+        }
+      })
+      .catch(() => {
+        // Imported captures are optional; the demo chat should still render if Supabase is not set up yet.
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [upsertImportedConversations]);
 
   const handleAddAttachments = useCallback((files: FileList) => {
     const newAttachments: Attachment[] = Array.from(files).map((file) => ({

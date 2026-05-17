@@ -10,41 +10,37 @@
     <main class="app">
       <header class="app-header">
         <div>
-          <p class="eyebrow">Simple capture</p>
+          <p class="eyebrow">Conversation capture</p>
           <h1>Support Promise Vault</h1>
         </div>
         <button id="refresh-page" class="ghost-button" type="button">Refresh</button>
       </header>
 
-      <section class="panel">
+      <section class="hero-panel">
         <div class="panel-heading">
-          <h2>Current page</h2>
+          <h2 id="detected-provider">Scanning</h2>
           <span id="page-status" class="status-pill">Loading</span>
         </div>
-        <div class="meta-list">
-          <div class="meta-grid">
-            <div>
-              <label>Provider</label>
-              <p id="detected-provider">-</p>
-            </div>
-            <div>
-              <label>Surface</label>
-              <p id="detected-surface">-</p>
-            </div>
+        <p id="page-selection" class="capture-preview-copy">Looking for a support thread on this page.</p>
+        <div class="capture-stats">
+          <div>
+            <span>Surface</span>
+            <strong id="detected-surface">-</strong>
           </div>
           <div>
-            <label>Title</label>
-            <p id="page-title">-</p>
+            <span>Company</span>
+            <strong id="detected-company">-</strong>
           </div>
           <div>
-            <label>URL</label>
-            <p id="page-url">-</p>
-          </div>
-          <div>
-            <label>Detected transcript</label>
-            <p id="page-selection" class="multiline">No support transcript detected yet.</p>
+            <span>Amount</span>
+            <strong id="detected-amount">-</strong>
           </div>
         </div>
+        <div class="primary-actions">
+          <button id="run-full-capture" class="primary-button" type="button">Capture conversation</button>
+          <button id="sync-app" class="secondary-button" type="button">Sync to app</button>
+        </div>
+        <button id="open-app" class="quiet-link" type="button">Open app inbox</button>
         <div id="proof-panel" class="proof-panel is-hidden">
           <div class="proof-preview-frame">
             <img id="proof-image" alt="Captured support proof preview" />
@@ -58,21 +54,13 @@
 
       <section class="panel">
         <div class="panel-heading">
-          <h2>Detected fields</h2>
+          <h2>Review</h2>
           <span class="status-pill muted">Auto</span>
         </div>
         <div class="meta-list">
           <div>
-            <label>Company guess</label>
-            <p id="detected-company">-</p>
-          </div>
-          <div>
-            <label>Case ID guess</label>
+            <label>Case ID</label>
             <p id="detected-case-id">-</p>
-          </div>
-          <div>
-            <label>Amount guess</label>
-            <p id="detected-amount">-</p>
           </div>
           <div>
             <label>Promised outcome guess</label>
@@ -85,6 +73,19 @@
             </div>
           </div>
         </div>
+        <details class="page-details">
+          <summary>Page details</summary>
+          <div class="meta-list">
+            <div>
+              <label>Title</label>
+              <p id="page-title">-</p>
+            </div>
+            <div>
+              <label>URL</label>
+              <p id="page-url">-</p>
+            </div>
+          </div>
+        </details>
       </section>
 
       <form id="capture-form" class="panel form-panel">
@@ -154,7 +155,6 @@
           <button id="export-case" class="secondary-button" type="button">Export JSON</button>
         </div>
         <div class="button-row">
-          <button id="run-full-capture" class="secondary-button" type="button">Run full capture</button>
           <button id="use-quick-capture" class="ghost-button" type="button">Use quick capture</button>
         </div>
       </form>

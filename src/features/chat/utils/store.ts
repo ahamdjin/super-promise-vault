@@ -15,6 +15,7 @@ type ChatState = {
     attachments?: Attachment[],
     options?: { sender?: Message['sender']; author?: string }
   ) => void;
+  upsertImportedConversations: (conversations: Conversation[]) => void;
   getActiveConversation: () => Conversation | undefined;
 };
 
@@ -57,6 +58,22 @@ export const useChatStore = create<ChatState>()(
             ? { ...c, messages: [...c.messages, outgoing], unread: 0 }
             : c
         )
+      });
+    },
+
+    upsertImportedConversations: (importedConversations) => {
+      if (!importedConversations.length) return;
+
+      const state = get();
+      const importedIds = new Set(importedConversations.map((conversation) => conversation.id));
+      const existing = state.conversations.filter((conversation) => !importedIds.has(conversation.id));
+      const next = [...importedConversations, ...existing];
+
+      set({
+        conversations: next,
+        selectedConversationId: importedIds.has(state.selectedConversationId)
+          ? state.selectedConversationId
+          : importedConversations[0]?.id || state.selectedConversationId
       });
     },
 

@@ -104,7 +104,11 @@ function findBestProviderFrame() {
     .map((frame) => {
       const idAndClass = `${frame.id} ${frame.className} ${frame.name || ""} ${frame.src || ""}`.toLowerCase()
       let score = 0
-      if (/intercom|zendesk|zopim|helpscout|beacon|gorgias|tawk/.test(idAndClass)) {
+      if (
+        /intercom|zendesk|zopim|helpscout|beacon|gorgias|tawk|crisp|drift|freshchat|freshworks|livechat|hubspot|userlike|olark|messenger|facebook/.test(
+          idAndClass
+        )
+      ) {
         score += 10
       }
       if (/chat|support|message|conversation|widget/.test(idAndClass)) {
@@ -142,8 +146,17 @@ function extractTranscript(element) {
 
   const lineSelectors = [
     '[data-message-author-role]',
+    '[data-testid*="message"]',
+    '[data-testid*="conversation"]',
+    '[data-testid*="chat"]',
+    '[data-qa*="message"]',
+    '[data-cy*="message"]',
+    '[aria-label*="message" i]',
     '[class*="message"]',
     '[class*="bubble"]',
+    '[class*="reply"]',
+    '[class*="conversation"]',
+    '[class*="transcript"]',
     '[class*="line"]',
     "article",
     "li",
@@ -213,8 +226,17 @@ function extractVisibleTranscriptChunk(element) {
   const containerRect = element.getBoundingClientRect()
   const lineSelectors = [
     '[data-message-author-role]',
+    '[data-testid*="message"]',
+    '[data-testid*="conversation"]',
+    '[data-testid*="chat"]',
+    '[data-qa*="message"]',
+    '[data-cy*="message"]',
+    '[aria-label*="message" i]',
     '[class*="message"]',
     '[class*="bubble"]',
+    '[class*="reply"]',
+    '[class*="conversation"]',
+    '[class*="transcript"]',
     '[class*="line"]',
     "article",
     "li",
@@ -275,7 +297,11 @@ function extractAttachments(element) {
   const items = []
   const seen = new Set()
 
-  element.querySelectorAll("img, a[href], [data-attachment], [class*='attachment']").forEach((node) => {
+  element
+    .querySelectorAll(
+      "img, a[href], [download], [data-attachment], [data-testid*='attachment'], [data-testid*='file'], [class*='attachment'], [class*='file']"
+    )
+    .forEach((node) => {
     if (!(node instanceof HTMLElement) || !isVisible(node)) {
       return
     }
@@ -313,7 +339,7 @@ function extractAttachments(element) {
         url
       })
     }
-  })
+    })
 
   return items.slice(0, 8)
 }
@@ -354,15 +380,32 @@ function detectProvider() {
       }
     })
 
-    document.querySelectorAll("script[src], iframe[src], iframe[name]").forEach((node) => {
-      const haystack = `${node.getAttribute("src") || ""} ${node.getAttribute("name") || ""}`.toLowerCase()
+    const documentSignals = [
+      document.documentElement.innerHTML.slice(0, 12000),
+      document.body?.className || "",
+      document.body?.id || ""
+    ].join(" ")
+
+    ;(provider.patterns || []).forEach((pattern) => {
+      if (pattern.test(documentSignals)) {
+        score += 4
+      }
+    })
+
+    document.querySelectorAll("script[src], iframe[src], iframe[name], link[href]").forEach((node) => {
+      const haystack =
+        `${node.getAttribute("src") || ""} ${node.getAttribute("href") || ""} ${node.getAttribute("name") || ""}`.toLowerCase()
       if (haystack.includes(provider.id)) {
         score += 4
       }
+
+      ;(provider.patterns || []).forEach((pattern) => {
+        if (pattern.test(haystack)) {
+          score += 4
+        }
+      })
+
       if (provider.id === "zendesk" && /zopim|zdassets/.test(haystack)) {
-        score += 4
-      }
-      if (provider.id === "helpscout" && /beacon-v2|helpscout/.test(haystack)) {
         score += 4
       }
     })

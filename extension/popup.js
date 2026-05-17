@@ -1,5 +1,6 @@
 const STORAGE_KEY = "supportPromiseVaultCaptures"
 const MAX_CAPTURES = 12
+const APP_ORIGIN = "https://super-promise-vault.vercel.app"
 
 const state = {
   activeTab: null,
@@ -39,6 +40,8 @@ const els = {
   form: document.getElementById("capture-form"),
   runFullCaptureButton: document.getElementById("run-full-capture"),
   useQuickCaptureButton: document.getElementById("use-quick-capture"),
+  syncAppButton: document.getElementById("sync-app"),
+  openAppButton: document.getElementById("open-app"),
   refreshButton: document.getElementById("refresh-page"),
   exportButton: document.getElementById("export-case"),
   clearButton: document.getElementById("clear-captures"),
@@ -70,6 +73,10 @@ async function init() {
 function bindEvents() {
   els.form.addEventListener("submit", onSaveCapture)
   els.runFullCaptureButton.addEventListener("click", onRunFullCapture)
+  els.syncAppButton.addEventListener("click", onSyncCaptureToApp)
+  els.openAppButton.addEventListener("click", () => {
+    chrome.tabs.create({ url: `${APP_ORIGIN}/dashboard/chat` })
+  })
   els.useQuickCaptureButton.addEventListener("click", () => {
     state.fullCaptureResult = null
     setFeedback("Quick capture mode selected.")
@@ -269,12 +276,16 @@ async function onSaveCapture(event) {
   const capture = buildCapture()
   state.lastSavedCapture = capture
 
-  const existing = await getCaptures()
-  const next = [capture, ...existing].slice(0, MAX_CAPTURES)
-  await chrome.storage.local.set({ [STORAGE_KEY]: next })
+  await saveCaptureLocal(capture)
 
   await renderSavedCaptures()
   setFeedback("Capture saved locally with proof.")
+}
+
+async function saveCaptureLocal(capture) {
+  const existing = await getCaptures()
+  const next = [capture, ...existing.filter((item) => item.id !== capture.id)].slice(0, MAX_CAPTURES)
+  await chrome.storage.local.set({ [STORAGE_KEY]: next })
 }
 
 async function onRunFullCapture() {
@@ -494,6 +505,46 @@ async function runOcrFallback(captureResult) {
     attachments: [...(state.pageContext?.attachments || []), ...attachmentHints],
     proofTargetRect: state.pageContext?.proofTargetRect || null,
     strategy: "frame-ocr"
+  }
+}
+
+async function onSyncCaptureToApp() {
+  try {
+    setStatus("Syncing", false)
+    setFeedback("Saving locally and sending capture to the app...")
+
+    const capture = buildCapture()
+    state.lastSavedCapture = capture
+    await saveCaptureLocal(capture)
+    await renderSavedCaptures()
+
+    const response = await fetch(`${APP_ORIGIN}/api/extension/captures`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(capture)
+    })
+
+    const payload = await response.json().catch(() => ({}))
+
+    if (!response.ok) {
+      const message =
+        response.status === 401
+          ? "Open the app, sign in, then click Sync again."
+          : payload.error || "The app did not accept this capture yet."
+      setStatus("Sync blocked", true)
+      setFeedback(message, true)
+      return
+    }
+
+    setStatus("Synced", false)
+    setFeedback("Capture synced to the app inbox.")
+  } catch (error) {
+    console.error(error)
+    setStatus("Sync failed", true)
+    setFeedback("Could not sync to the app. The capture is still saved locally.", true)
   }
 }
 

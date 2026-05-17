@@ -11,6 +11,7 @@
   --background: #fafafa;
   --foreground: #111111;
   --card: #ffffff;
+  --ink-soft: #27272a;
   --muted: #f3f4f6;
   --muted-foreground: #6b7280;
   --border: #e5e7eb;
@@ -33,9 +34,9 @@ body {
 }
 
 .app {
-  width: 392px;
+  width: 410px;
   min-height: 620px;
-  padding: 14px;
+  padding: 12px;
   box-sizing: border-box;
 }
 
@@ -73,13 +74,20 @@ body {
   color: var(--muted-foreground);
 }
 
-.panel {
+.panel,
+.hero-panel {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) + 4px);
   padding: 14px;
   margin-bottom: 12px;
   box-shadow: var(--shadow);
+}
+
+.hero-panel {
+  background: linear-gradient(180deg, #ffffff 0%, #f7faf8 100%);
+  border-color: #d9e7dd;
+  padding: 16px;
 }
 
 .panel-heading {
@@ -144,6 +152,68 @@ body {
   max-height: 86px;
   overflow: auto;
   white-space: pre-wrap;
+}
+
+.capture-preview-copy {
+  margin: 0;
+  max-height: 118px;
+  overflow: auto;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.capture-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.capture-stats div {
+  min-width: 0;
+  border: 1px solid rgba(18, 82, 52, 0.12);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.72);
+  padding: 9px;
+}
+
+.capture-stats span {
+  display: block;
+  color: var(--muted-foreground);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.capture-stats strong {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--foreground);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.primary-actions {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.quiet-link {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 0;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  text-align: center;
 }
 
 .proof-panel {
@@ -219,6 +289,25 @@ body {
   border-radius: 999px;
   color: var(--accent-foreground);
   text-decoration: none;
+}
+
+.attachment-link.muted-link {
+  color: var(--muted-foreground);
+}
+
+.page-details {
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.page-details summary {
+  cursor: pointer;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .field-grid {
