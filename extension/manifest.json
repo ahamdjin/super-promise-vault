@@ -8,7 +8,16 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "all_frames": true,
+      "match_about_blank": true,
+      "match_origin_as_fallback": true,
+      "js": [
+        "core/shared.js",
+        "core/provider-registry.js",
+        "core/capture-session.js",
+        "core/full-thread-capture.js",
+        "content.js"
+      ],
       "run_at": "document_idle"
     }
   ],

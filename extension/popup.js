@@ -5,6 +5,7 @@ const state = {
   activeTab: null,
   pageContext: null,
   pageProof: null,
+  captureStrategy: null,
   lastSavedCapture: null,
   previewCapture: null
 }
@@ -133,6 +134,7 @@ async function hydrateCurrentTab() {
 
   state.pageContext = pageContext
   state.pageProof = pageProof
+  state.captureStrategy = resolveCaptureStrategy(pageContext)
 
   const transcript = pageContext?.transcript || pageContext?.selection || ""
   const providerName = pageContext?.provider?.name || "Generic page"
@@ -266,26 +268,26 @@ async function onSaveCapture(event) {
 }
 
 function buildCapture() {
-  const createdAt = new Date().toISOString()
-  return {
-    id: "capture-" + createdAt,
-    provider: state.pageContext?.provider?.name || "Generic page",
-    supportSurface: state.pageContext?.supportSurface || "weak",
-    company: els.company.value.trim(),
-    caseId: els.caseId.value.trim(),
-    issueTitle: els.issueTitle.value.trim(),
-    promisedOutcome: els.promisedOutcome.value.trim(),
-    amount: els.amount.value.trim(),
-    followUpAt: els.followUpAt.value,
-    internalNote: els.internalNote.value.trim(),
-    selectedText: state.pageContext?.selection || "",
-    transcript: state.pageContext?.transcript || "",
-    attachments: state.pageContext?.attachments || [],
-    pageTitle: state.activeTab?.title || "",
-    pageUrl: state.activeTab?.url || "",
-    proof: state.pageProof,
-    createdAt
-  }
+  const providerAdapter = globalThis.SPV.detectProviderAdapter(state.pageContext)
+  const strategy = state.captureStrategy || globalThis.SPV.planFullThreadCapture(state.pageContext, providerAdapter)
+
+  return globalThis.SPV.createCaptureSession({
+    pageContext: state.pageContext,
+    pageProof: state.pageProof,
+    providerAdapter,
+    strategy,
+    formValues: {
+      company: els.company.value.trim(),
+      caseId: els.caseId.value.trim(),
+      issueTitle: els.issueTitle.value.trim(),
+      promisedOutcome: els.promisedOutcome.value.trim(),
+      amount: els.amount.value.trim(),
+      followUpAt: els.followUpAt.value,
+      internalNote: els.internalNote.value.trim(),
+      pageTitle: state.activeTab?.title || "",
+      pageUrl: state.activeTab?.url || ""
+    }
+  })
 }
 
 async function onExportLastCapture() {
@@ -343,7 +345,7 @@ async function renderSavedCaptures() {
         <span class="status-pill muted">${formatDate(capture.followUpAt)}</span>
       </div>
       <div class="capture-badges">
-        <span class="status-pill muted">${escapeHtml(capture.provider || "Generic page")}</span>
+        <span class="status-pill muted">${escapeHtml(capture.providerName || capture.provider?.name || "Generic page")}</span>
         <span class="status-pill muted">${escapeHtml(formatSurface(capture.supportSurface))}</span>
       </div>
       <p class="capture-meta">${escapeHtml(capture.promisedOutcome || "No promise saved.")}</p>
@@ -552,4 +554,9 @@ function formatSurface(value) {
 
 function cleanGuess(value) {
   return typeof value === "string" ? value.trim() : ""
+}
+
+function resolveCaptureStrategy(pageContext) {
+  const providerAdapter = globalThis.SPV.detectProviderAdapter(pageContext)
+  return globalThis.SPV.planFullThreadCapture(pageContext, providerAdapter)
 }

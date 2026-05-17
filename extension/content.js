@@ -1,54 +1,4 @@
-const PROVIDERS = [
-  {
-    id: "tawk",
-    name: "tawk.to",
-    selectors: ['script[src*="tawk"]', '[id*="tawk"]', '[class*="tawk"]']
-  },
-  {
-    id: "zendesk",
-    name: "Zendesk",
-    selectors: [
-      'iframe[src*="zendesk"]',
-      'iframe[src*="zopim"]',
-      'script[src*="zdassets"]',
-      '[id*="zendesk"]',
-      '[class*="zendesk"]',
-      '[data-product="web_widget"]'
-    ]
-  },
-  {
-    id: "intercom",
-    name: "Intercom",
-    selectors: [
-      'iframe[src*="intercom"]',
-      'iframe[name*="intercom"]',
-      'script[src*="intercom"]',
-      '#intercom-container',
-      '[class*="intercom"]'
-    ]
-  },
-  {
-    id: "helpscout",
-    name: "Help Scout",
-    selectors: [
-      'iframe[src*="helpscout"]',
-      'iframe[src*="beacon-v2"]',
-      'script[src*="beacon-v2"]',
-      '[class*="Beacon"]',
-      '[id*="beacon"]'
-    ]
-  },
-  {
-    id: "gorgias",
-    name: "Gorgias",
-    selectors: [
-      'iframe[src*="gorgias"]',
-      'script[src*="gorgias"]',
-      '#gorgias-chat-container',
-      '[class*="gorgias"]'
-    ]
-  }
-]
+const PROVIDERS = (globalThis.SPV?.listProviders?.() || []).filter((provider) => provider.id !== "generic")
 
 function isVisible(element) {
   if (!(element instanceof HTMLElement)) {
@@ -378,7 +328,7 @@ function getPageContext() {
     transcriptRect,
     proofTargetRect,
     attachments,
-    provider,
+    provider: provider.score ? provider : { id: "generic", name: "Generic support widget", score: 0 },
     supportSurface,
     issueTitleGuess: getIssueTitleGuess(),
     companyGuess: window.location.hostname.replace(/^www\./, "").split(".")[0] || "",
